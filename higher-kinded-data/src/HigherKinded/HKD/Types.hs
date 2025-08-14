@@ -17,13 +17,13 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+-- | Based on 'HKD' from 'Data.Generic.HKD.Types from package 'higgledy'
+--   by Tom Harding ((c) Tom Harding, 2019, MIT)
+
 module HigherKinded.HKD.Types
   ( module HigherKinded.HKD.Types
   , module Barbies
   ) where
-
--- | Based on 'HKD' from 'Data.Generic.HKD.Types from package 'higgledy'
---   by Tom Harding ((c) Tom Harding, 2019, MIT)
 
 import Barbies (ConstraintsB (..), FunctorB (..), ApplicativeB (..), TraversableB (..))
 import Barbies.Constraints (Dict (..))
