@@ -17,6 +17,7 @@
 
 module HigherKinded.Instance.F where
 
+import Data.Functor.Compose
 import Data.Functor.Identity
 import Data.Kind
 import GHC.Generics (Generic)
@@ -32,6 +33,7 @@ infixr 0 $~
 type ($~) :: (k1 -> k2) -> k1 -> k3
 type family ($~) f x where
   ($~) Identity x = x
+  ($~) (Compose f g) x = f $~ (g $~ x)
   ($~) f x = f x
 
 
@@ -43,12 +45,18 @@ newtype F' f x = F' { unF' :: f $~ x }
 instance FromHKT F' Identity x where
   fromHKT' (F' x) = Identity x
 
+instance (Functor f, FromHKT F' f (g $~ x), FromHKT F' g x) => FromHKT F' (Compose (f :: Type -> Type) (g :: Type -> Type)) x where
+  fromHKT' (F' x) = Compose $ fmap (fromHKT' . F') $ (fromHKT' . F') $ x
+
 instance {-# OVERLAPPABLE #-} ((f $~ x) ~ (f x)) => FromHKT F' f x where
   fromHKT' (F' x) = x
 
 
 instance ToHKT F' Identity x where
   toHKT' (Identity x) = F' x
+
+instance (Functor f, ToHKT F' f (g $~ x), ToHKT F' g x) => ToHKT F' (Compose (f :: Type -> Type) (g :: Type -> Type)) x where
+  toHKT' (Compose x) = F' $ unF' . toHKT' $ fmap (unF' . toHKT') x
 
 instance {-# OVERLAPPABLE #-} ((f $~ x) ~ (f x)) => ToHKT F' f x where
   toHKT' = F'
