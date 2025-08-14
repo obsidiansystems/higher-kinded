@@ -13,7 +13,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 
--- | Based on 'Data.Generic.HKD.Named from package 'higgledy'
+-- | Based on 'Data.Generic.HKD.Named' from package 'higgledy'
 --   by Tom Harding ((c) Tom Harding, 2019, MIT)
 
 module HigherKinded.HKD.Build
@@ -54,11 +54,11 @@ import HigherKinded.HKD.Types (HKD, HKD_)
 --
 -- >>> :{
 -- test :: _
--- test = build @User
+-- test = build @(HKD User Ap f)
 -- :}
 -- ...
 -- ... Found type wildcard ...
--- ... standing for ...f [Char] -> f Int -> f Bool -> HKD User f...
+-- ... standing for ...Arg "name" (f String) -> Arg "age" (f Int) -> Arg "likesDogs" (f Bool) -> HKD User Ap f...
 -- ...
 --
 -- Once we call the 'build' function, and indicate the type we want to build,
