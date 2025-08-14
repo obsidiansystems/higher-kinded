@@ -18,6 +18,7 @@
 module HigherKinded.HKT where
 
 import Control.Lens
+import Data.Monoid (Ap(..))
 import Data.Kind
 import GHC.Generics hiding (from, to)
 import GHC.Generics qualified as G
@@ -32,6 +33,13 @@ class FromHKT t f a where
 
 class ToHKT t f a where
   toHKT' :: f a -> t f a
+
+
+instance FromHKT Ap f a where
+  fromHKT' = getAp
+
+instance ToHKT Ap f a where
+  toHKT' = Ap
 
 
 
