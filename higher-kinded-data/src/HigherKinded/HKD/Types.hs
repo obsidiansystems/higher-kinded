@@ -44,12 +44,12 @@ import HigherKinded.HKT
 
 
 type HKD :: Type -> ((Type -> Type) -> Type -> Type) -> (Type -> Type) -> Type
-newtype HKD structure hkt f = HKD { unHKD :: HKD_ structure hkt f () }
+newtype HKD structure hkt f = GHKD { unGHKD :: GHKD_ (Rep structure) hkt f () }
 
 instance (Contravariant (HKD_ structure hkt f), Functor (HKD_ structure hkt f)) => Generic (HKD structure hkt f) where
   type Rep (HKD structure hkt f) = HKD_ structure hkt f
-  from = phantom . unHKD
-  to   = HKD . phantom
+  from = phantom . unGHKD
+  to   = GHKD . phantom
 
 type HKD_ :: Type -> ((Type -> Type) -> Type -> Type) -> (Type -> Type) -> (Type -> Type)
 type HKD_ structure hkt f = GHKD_ (Rep structure) hkt f
@@ -101,11 +101,11 @@ instance (Monoid tuple, Generic xs, Tuple xs hkt f tuple)
 
 instance (Arbitrary tuple, GToTuple (HKD_ structure hkt f) tuple)
     => Arbitrary (HKD structure hkt f) where
-  arbitrary = fmap (HKD . gfromTuple) arbitrary
+  arbitrary = fmap (GHKD . gfromTuple) arbitrary
 
 instance (CoArbitrary tuple, GToTuple (HKD_ structure hkt f) tuple)
     => CoArbitrary (HKD structure hkt f) where
-  coarbitrary (HKD x) = coarbitrary (gtoTuple x)
+  coarbitrary (GHKD x) = coarbitrary (gtoTuple x)
 
 instance (Function tuple, Tuple structure hkt f tuple)
     => Function (HKD structure hkt f) where
@@ -147,7 +147,7 @@ instance (Show inner) => GShow named (K1 R inner) where
 
 instance (Generic structure, GShow 'True (HKD_ structure hkt f))
     => Show (HKD structure hkt f) where
-  show (HKD x) = gshow @'True x
+  show (GHKD x) = gshow @'True x
 
 --------------------------------------------------------------------------------
 
@@ -181,8 +181,8 @@ instance GToTuple (K1 index inner) inner where
 
 instance (GToTuple (HKD_ structure hkt f) tuple)
     => Tuple structure hkt f tuple where
-  toTuple = gtoTuple . unHKD
-  fromTuple = HKD . gfromTuple
+  toTuple = gtoTuple . unGHKD
+  fromTuple = GHKD . gfromTuple
 
 --------------------------------------------------------------------------------
 

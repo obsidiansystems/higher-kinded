@@ -60,8 +60,8 @@ instance
     , GConstruct (Rep structure) hkt f
     )
     => Construct HKD structure hkt f where
-  fromHKD = fmap to . gFromHKD @(Rep structure) @hkt @f . unHKD
-  toHKD = HKD . gToHKD @(Rep structure) @hkt @f . from
+  fromHKD = fmap to . gFromHKD @(Rep structure) @hkt @f . unGHKD
+  toHKD = GHKD . gToHKD @(Rep structure) @hkt @f . from
 
 
 
