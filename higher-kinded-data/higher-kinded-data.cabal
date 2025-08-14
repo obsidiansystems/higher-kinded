@@ -73,6 +73,7 @@ library
     -- Modules exported by the library.
     exposed-modules:  HigherKinded.HKD
                       HigherKinded.HKD.Build
+                      HigherKinded.HKD.Construction
                       HigherKinded.HKD.Types
 
     -- Modules included in this library but not exported.
@@ -87,6 +88,7 @@ library
                     , generic-lens
                     , generic-lens-core
                     , higher-kinded-types
+                    , lens
                     , QuickCheck
 
     -- Directories containing source files.
