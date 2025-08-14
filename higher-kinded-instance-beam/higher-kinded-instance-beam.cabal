@@ -71,7 +71,7 @@ library
     import:           warnings
 
     -- Modules exported by the library.
-    exposed-modules:  HigherKinded.Instances.Beam
+    exposed-modules:  HigherKinded.Instance.Beam
 
     -- Modules included in this library but not exported.
     -- other-modules:

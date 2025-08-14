@@ -18,8 +18,8 @@
 
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module HigherKinded.Instances.Beam
-  ( module HigherKinded.Instances.Beam
+module HigherKinded.Instance.Beam
+  ( module HigherKinded.Instance.Beam
   , Columnar
   , Columnar'
   ) where

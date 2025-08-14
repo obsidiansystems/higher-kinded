@@ -15,7 +15,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module HigherKinded.Instances.F where
+module HigherKinded.Instance.F where
 
 import Data.Functor.Identity
 import Data.Kind

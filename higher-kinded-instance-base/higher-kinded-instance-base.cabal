@@ -71,7 +71,7 @@ library
     import:           warnings
 
     -- Modules exported by the library.
-    exposed-modules:  HigherKinded.Instances.F
+    exposed-modules:  HigherKinded.Instance.F
 
     -- Modules included in this library but not exported.
     -- other-modules:
