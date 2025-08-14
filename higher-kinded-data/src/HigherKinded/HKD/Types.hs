@@ -23,6 +23,7 @@
 module HigherKinded.HKD.Types
   ( module HigherKinded.HKD.Types
   , module Barbies
+  , Dict (..)
   ) where
 
 import Barbies (ConstraintsB (..), FunctorB (..), ApplicativeB (..), TraversableB (..))
