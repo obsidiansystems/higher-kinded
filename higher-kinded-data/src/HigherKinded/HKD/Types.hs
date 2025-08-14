@@ -55,7 +55,7 @@ type HKD_ :: Type -> ((Type -> Type) -> Type -> Type) -> (Type -> Type) -> (Type
 type HKD_ structure hkt f = GHKD_ (Rep structure) hkt f
 
 type GHKD_ :: (Type -> Type) -> ((Type -> Type) -> Type -> Type) -> (Type -> Type) -> (Type -> Type)
-type family GHKD_ structureRep hkt f = (res :: Type -> Type) where -- | res -> structureRep hkt f where
+type family GHKD_ structureRep hkt f = (res :: Type -> Type) where
   GHKD_ (M1 index meta inner) hkt f = M1 index meta (GHKD_ inner hkt f)
   GHKD_ (left :*: right) hkt f = GHKD_ left hkt f :*: GHKD_ right hkt f
   GHKD_ (left :+: right) hkt f = GHKD_ left hkt f :+: GHKD_ right hkt f
