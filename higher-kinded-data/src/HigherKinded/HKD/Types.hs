@@ -390,12 +390,12 @@ instance
 --------------------------------------------------------------------------------
 
 withConstrainedFieldsHKD
-  :: forall c hkd f.
+  :: forall c hkd hkt f.
      ( HKDFieldsHave c hkd
-     , ApplicativeB hkd
+     , ZippableHKD hkd hkt (Dict c) f (Dict c `Product` f)
      )
   => hkd f -> hkd (Dict c `Product` f)
-withConstrainedFieldsHKD = bprod (withConstraintsHKD @c @hkd)
+withConstrainedFieldsHKD = zipHKD @hkd @hkt (Pair) (withConstraintsHKD @c @hkd)
 
 withConstraintsHKD :: forall c hkd. HKDFieldsHave c hkd => hkd (Dict c)
 withConstraintsHKD = G.to $ gWithConstrainedFields (Proxy @c) (Proxy @(Rep (hkd Exposed)))
@@ -444,4 +444,4 @@ instance
          )
       => HKD structure hkt f
       -> HKD structure hkt (Dict c `Product` f)
-    baddDicts = withConstrainedFieldsHKD @c @(HKD structure hkt) @f
+    baddDicts = withConstrainedFieldsHKD @c @(HKD structure hkt) @hkt @f
