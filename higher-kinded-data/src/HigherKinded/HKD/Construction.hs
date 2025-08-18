@@ -50,16 +50,16 @@ import HigherKinded.HKT
 -- These two methods also satisfy the round-tripping property:
 --
 -- prop> construct (deconstruct x) == [ x :: (Int, Bool, String) ]
-class Construct hkd (structure :: Type) (hkt :: ((Type -> Type) -> Type -> Type)) (f :: Type -> Type) where
-  fromHKD :: hkd structure hkt f -> f structure
-  toHKD :: structure -> hkd structure hkt f
+class Construct (hkd :: (Type -> Type) -> Type) (structure :: Type) (f :: Type -> Type) where
+  fromHKD :: hkd f -> f structure
+  toHKD :: structure -> hkd f
 
 instance
     ( Applicative f
     , Generic structure
     , GConstruct (Rep structure) hkt f
     )
-    => Construct HKD structure hkt f where
+    => Construct (HKD structure hkt) structure f where
   fromHKD = fmap to . gFromHKD @(Rep structure) @hkt @f . unGHKD
   toHKD = GHKD . gToHKD @(Rep structure) @hkt @f . from
 
