@@ -22,14 +22,13 @@ module HigherKinded.HKD.Build
   , Name (..)
   ) where
 
-import Data.Functor.Contravariant (Contravariant (..))
 import Data.Generics.Product.Internal.Subtype (GUpcast (..))
 import Data.Kind
 import GHC.Generics
 import GHC.OverloadedLabels
 import GHC.TypeLits
 
-import HigherKinded.HKD.Types (HKD, HKD_)
+import HigherKinded.HKD.Types
 
 
 
@@ -66,18 +65,33 @@ import HigherKinded.HKD.Types (HKD, HKD_)
 class Build (hkd :: Type) (k :: Type) | hkd -> k, k -> hkd where
   build :: k
 
+
+
 instance
-    ( Contravariant (HKD_ structure hkt f)
-    , Functor (HKD_ structure hkt f)
-    --
+    ( BuildHKD' structure hkt f k
     , list ~ Rearrange (HKD_ structure hkt f)
-    , GUpcast list (HKD_ structure hkt f)
-    , GBuild list structure hkt f k
     )
   =>
     Build (HKD structure hkt f) k
   where
     build = gbuild @_ @structure @hkt @f (to . gupcast @list @(HKD_ structure hkt f))
+
+class
+    ( GenericHKD' structure hkt f
+    --
+    , GUpcast (Rearrange (HKD_ structure hkt f)) (HKD_ structure hkt f)
+    , GBuild (Rearrange (HKD_ structure hkt f)) structure hkt f k
+    )
+  => BuildHKD' structure hkt f k
+
+instance
+    ( GenericHKD' structure hkt f
+    --
+    , GUpcast (Rearrange (HKD_ structure hkt f)) (HKD_ structure hkt f)
+    , GBuild (Rearrange (HKD_ structure hkt f)) structure hkt f k
+    )
+  => BuildHKD' structure hkt f k
+
 
 
 class GBuild (rep :: Type -> Type) (structure :: Type) (hkt :: ((Type -> Type) -> Type -> Type)) (f :: Type -> Type) (k :: Type)

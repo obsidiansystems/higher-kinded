@@ -47,10 +47,6 @@ import HigherKinded.HKT
 type HKD :: Type -> ((Type -> Type) -> Type -> Type) -> (Type -> Type) -> Type
 newtype HKD structure hkt f = GHKD { unGHKD :: GHKD_ (Rep structure) hkt f () }
 
-instance (Contravariant (HKD_ structure hkt f), Functor (HKD_ structure hkt f)) => Generic (HKD structure hkt f) where
-  type Rep (HKD structure hkt f) = HKD_ structure hkt f
-  from = phantom . unGHKD
-  to   = GHKD . phantom
 
 type HKD_ :: Type -> ((Type -> Type) -> Type -> Type) -> (Type -> Type) -> (Type -> Type)
 type HKD_ structure hkt f = GHKD_ (Rep structure) hkt f
@@ -79,6 +75,16 @@ type ($<) :: (k1 -> k2) -> k1 -> k3
 type family ($<) d tag where
   ($<) d tag = d tag
   ($<) d tag = d
+
+--------------------------------------------------------------------------------
+
+instance GenericHKD' structure hkt f => Generic (HKD structure hkt f) where
+  type Rep (HKD structure hkt f) = HKD_ structure hkt f
+  from = phantom . unGHKD
+  to   = GHKD . phantom
+
+class (Contravariant (HKD_ structure hkt f), Functor (HKD_ structure hkt f)) => GenericHKD' structure hkt f
+instance (Contravariant (HKD_ structure hkt f), Functor (HKD_ structure hkt f)) => GenericHKD' structure hkt f
 
 --------------------------------------------------------------------------------
 
@@ -209,6 +215,8 @@ class BiTraversableHKD (hkd :: (Type -> Type) -> Type) (hkt :: (Type -> Type) ->
   bitraverseHKD combine (hkd_f :: hkd f) (hkd_g :: hkd g) =
     G.to <$> gbitraverseHKD @hkt @f @g @h @(Rep (hkd Exposed)) @(Rep (hkd f)) @(Rep (hkd g)) @(Rep (hkd h)) combine (G.from hkd_f) (G.from hkd_g)
 
+
+
 instance {-# OVERLAPPABLE #-}
     ( Generic (hkd f)
     , Generic (hkd g)
@@ -217,17 +225,44 @@ instance {-# OVERLAPPABLE #-}
     )
   => BiTraversableHKD hkd hkt f g h
 
-instance
+
+
+instance BiTraversableHKD' structure hkt f g h => BiTraversableHKD (HKD structure hkt) hkt f g h
+
+class
     ( Generic (HKD structure hkt f)
     , Generic (HKD structure hkt g)
     , Generic (HKD structure hkt h)
+    , Generic (HKD structure hkt Exposed)
+    , GenericHKD' structure hkt f
+    , GenericHKD' structure hkt g
+    , GenericHKD' structure hkt h
+    , GenericHKD' structure hkt Exposed
     , GBiTraversableHKD hkt f g h
         (Rep (HKD structure hkt Exposed))
         (Rep (HKD structure hkt f))
         (Rep (HKD structure hkt g))
         (Rep (HKD structure hkt h))
     )
-  => BiTraversableHKD (HKD structure hkt) hkt f g h
+  => BiTraversableHKD' structure hkt f g h
+
+instance
+    ( Generic (HKD structure hkt f)
+    , Generic (HKD structure hkt g)
+    , Generic (HKD structure hkt h)
+    , Generic (HKD structure hkt Exposed)
+    , GenericHKD' structure hkt f
+    , GenericHKD' structure hkt g
+    , GenericHKD' structure hkt h
+    , GenericHKD' structure hkt Exposed
+    , GBiTraversableHKD hkt f g h
+        (Rep (HKD structure hkt Exposed))
+        (Rep (HKD structure hkt f))
+        (Rep (HKD structure hkt g))
+        (Rep (HKD structure hkt h))
+    )
+  => BiTraversableHKD' structure hkt f g h
+
 
 
 class GBiTraversableHKD hkt f g h rep_exp rep_f rep_g rep_h where
@@ -286,7 +321,27 @@ class TraversableHKD hkd hkt f g where
     -> t (hkd g)
   traverseHKD f hkd = bitraverseHKD @hkd @hkt @f @f @g (\x _ -> f x) hkd hkd
 
+
+
 instance {-# OVERLAPPABLE #-} BiTraversableHKD hkd hkt f f g => TraversableHKD hkd hkt f g
+
+
+
+instance TraversableHKD' structure hkt f g => TraversableHKD (HKD structure hkt) hkt f g
+
+class
+    ( BiTraversableHKD (HKD structure hkt) hkt f f g
+    , BiTraversableHKD' structure hkt f f g
+    )
+  => TraversableHKD' structure hkt f g
+
+instance
+    ( BiTraversableHKD (HKD structure hkt) hkt f f g
+    , BiTraversableHKD' structure hkt f f g
+    )
+  => TraversableHKD' structure hkt f g
+
+
 
 instance
     ( forall f g. TraversableHKD (HKD structure hkt) hkt f g
@@ -319,7 +374,27 @@ class FunctorHKD hkd hkt f g where
     -> hkd g
   mapHKD f hkd = runIdentity $ traverseHKD @hkd @hkt @f @g (Identity . f) hkd
 
+
+
 instance {-# OVERLAPPABLE #-} TraversableHKD hkd hkt f g => FunctorHKD hkd hkt f g
+
+
+
+instance FunctorHKD' structure hkt f g => FunctorHKD (HKD structure hkt) hkt f g
+
+class
+    ( TraversableHKD (HKD structure hkt) hkt f g
+    , TraversableHKD' structure hkt f g
+    )
+  => FunctorHKD' structure hkt f g
+
+instance
+    ( TraversableHKD (HKD structure hkt) hkt f g
+    , TraversableHKD' structure hkt f g
+    )
+  => FunctorHKD' structure hkt f g
+
+
 
 transformHKD
   :: forall hkd hkt1 hkt2 f g f_hkd_f f_hkd_g g_hkd_g.
@@ -333,6 +408,8 @@ transformHKD
   -> f_hkd_f
   -> g_hkd_g
 transformHKD f = hoistHKT @hkt1 @f @g @(hkd g) f . fmapHKT @hkt1 @f (mapHKD @hkd @hkt2 f) --fmapTransformT @hkt1 @f @g @(hkd f) @(hkd g) f (mapHKD @hkd @hkt2 f)
+
+
 
 instance
     ( forall f g. FunctorHKD (HKD structure hkt) hkt f g
@@ -365,7 +442,27 @@ class ZippableHKD hkd hkt f g h where
     -> hkd h
   zipHKD combine f g = runIdentity $ bitraverseHKD @hkd @hkt @f @g @h (\f' g' -> Identity $ combine f' g') f g
 
+
+
 instance {-# OVERLAPPABLE #-} BiTraversableHKD hkd hkt f g h => ZippableHKD hkd hkt f g h
+
+
+
+instance ZippableHKD' structure hkt f g h => ZippableHKD (HKD structure hkt) hkt f g h
+
+class
+    ( BiTraversableHKD (HKD structure hkt) hkt f g h
+    , BiTraversableHKD' structure hkt f g h
+    )
+  => ZippableHKD' structure hkt f g h
+
+instance
+    ( BiTraversableHKD (HKD structure hkt) hkt f g h
+    , BiTraversableHKD' structure hkt f g h
+    )
+  => ZippableHKD' structure hkt f g h
+
+
 
 instance
     ( forall f g h. ZippableHKD (HKD structure hkt) hkt f g h
@@ -400,15 +497,35 @@ withConstrainedFieldsHKD = zipHKD @hkd @hkt (Pair) (withConstraintsHKD @c @hkd)
 withConstraintsHKD :: forall c hkd. HKDFieldsHave c hkd => hkd (Dict c)
 withConstraintsHKD = G.to $ gWithConstrainedFields (Proxy @c) (Proxy @(Rep (hkd Exposed)))
 
-type HKDFieldsHave (c :: Type -> Constraint) t =
-  ( Generic (t (Dict c)), Generic (t Identity), Generic (t Exposed)
-  , GHKDFieldsHave c (Rep (t Exposed)) (Rep (t (Dict c)))
-  )
 
-type HKDFieldsHaveF (c :: Type -> Constraint) t f =
-  ( Generic (t (f (Dict c))), Generic (t (f Identity)), Generic (t (f Exposed))
-  , GHKDFieldsHave c (Rep (t (f Exposed))) (Rep (t (f (Dict c))))
-  )
+
+class
+    ( Generic (t (Dict c)), Generic (t Identity), Generic (t Exposed)
+    , GHKDFieldsHave c (Rep (t Exposed)) (Rep (t (Dict c)))
+    )
+  => HKDFieldsHave (c :: Type -> Constraint) t
+
+instance
+    ( Generic (t (Dict c)), Generic (t Identity), Generic (t Exposed)
+    , GHKDFieldsHave c (Rep (t Exposed)) (Rep (t (Dict c)))
+    )
+  => HKDFieldsHave (c :: Type -> Constraint) t
+
+
+
+class
+    ( Generic (t (f (Dict c))), Generic (t (f Identity)), Generic (t (f Exposed))
+    , GHKDFieldsHave c (Rep (t (f Exposed))) (Rep (t (f (Dict c))))
+    )
+  => HKDFieldsHaveF (c :: Type -> Constraint) t f
+
+instance
+    ( Generic (t (f (Dict c))), Generic (t (f Identity)), Generic (t (f Exposed))
+    , GHKDFieldsHave c (Rep (t (f Exposed))) (Rep (t (f (Dict c))))
+    )
+  => HKDFieldsHaveF (c :: Type -> Constraint) t f
+
+
 
 class GHKDFieldsHave (c :: Type -> Constraint) (exposed :: Type -> Type) withconstraint where
   gWithConstrainedFields :: Proxy c -> Proxy exposed -> withconstraint ()
@@ -429,9 +546,11 @@ instance HKDFieldsHaveF c t f =>
     GHKDFieldsHave c (K1 G.R (t (f Exposed))) (K1 G.R (t (f (Dict c)))) where
   gWithConstrainedFields _ _ = K1 (G.to (gWithConstrainedFields (Proxy @c) (Proxy @(Rep (t (f Exposed))))))
 
+
+
 instance
     ( FunctorB (HKD structure hkt)
-    , forall f' g' h'. BiTraversableHKD (HKD structure hkt) hkt f' g' h'
+    , forall f' g' h'. BiTraversableHKD' structure hkt f' g' h'
     )
   =>
     ConstraintsB (HKD structure hkt)

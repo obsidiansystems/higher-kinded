@@ -13,9 +13,7 @@
 -- | Based on 'Data.Generic.HKD.Construction from package 'higgledy'
 --   by Tom Harding ((c) Tom Harding, 2019, MIT)
 
-module HigherKinded.HKD.Construction
-  ( Construct (..)
-  ) where
+module HigherKinded.HKD.Construction where
 
 import Control.Lens (view)
 import Data.Kind
@@ -54,14 +52,25 @@ class Construct (hkd :: (Type -> Type) -> Type) (structure :: Type) (f :: Type -
   fromHKD :: hkd f -> f structure
   toHKD :: structure -> hkd f
 
+
+
+instance ConstructHKD' structure hkt f => Construct (HKD structure hkt) structure f where
+  fromHKD = fmap to . gFromHKD @(Rep structure) @hkt @f . unGHKD
+  toHKD = GHKD . gToHKD @(Rep structure) @hkt @f . from
+
+class
+    ( Applicative f
+    , Generic structure
+    , GConstruct (Rep structure) hkt f
+    )
+  => ConstructHKD' structure hkt f
+
 instance
     ( Applicative f
     , Generic structure
     , GConstruct (Rep structure) hkt f
     )
-    => Construct (HKD structure hkt) structure f where
-  fromHKD = fmap to . gFromHKD @(Rep structure) @hkt @f . unGHKD
-  toHKD = GHKD . gToHKD @(Rep structure) @hkt @f . from
+  => ConstructHKD' structure hkt f
 
 
 
