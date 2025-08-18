@@ -19,6 +19,7 @@ module HigherKinded.Instance.F where
 
 import Data.Functor.Compose
 import Data.Functor.Const
+import Data.Functor.Contravariant
 import Data.Functor.Identity
 import Data.Kind
 import GHC.Generics (Generic)
@@ -36,6 +37,7 @@ type family ($~) f x where
   ($~) Identity x = x
   ($~) (Compose f g) x = f $~ (g $~ x)
   ($~) (Const x) _ = x
+  ($~) (Op x) y = y -> x
   ($~) f x = f x
 
 
@@ -53,6 +55,9 @@ instance (Functor f, FromHKT F' f (g $~ x), FromHKT F' g x) => FromHKT F' (Compo
 instance FromHKT F' (Const x) a where
   fromHKT' (F' x) = Const x
 
+instance FromHKT F' (Op x) y where
+  fromHKT' (F' x) = Op x
+
 instance {-# OVERLAPPABLE #-} ((f $~ x) ~ (f x)) => FromHKT F' f x where
   fromHKT' (F' x) = x
 
@@ -65,6 +70,9 @@ instance (Functor f, ToHKT F' f (g $~ x), ToHKT F' g x) => ToHKT F' (Compose (f 
 
 instance ToHKT F' (Const x) a where
   toHKT' (Const x) = F' x
+
+instance ToHKT F' (Op x) y where
+  toHKT' (Op x) = F' x
 
 instance {-# OVERLAPPABLE #-} ((f $~ x) ~ (f x)) => ToHKT F' f x where
   toHKT' = F'
