@@ -50,7 +50,7 @@ instance FromHKT F' Identity x where
 instance (Functor f, FromHKT F' f (g $~ x), FromHKT F' g x) => FromHKT F' (Compose (f :: Type -> Type) (g :: Type -> Type)) x where
   fromHKT' (F' x) = Compose $ fmap (fromHKT' . F') $ (fromHKT' . F') $ x
 
-instance FromHKT F' (Const x) x where
+instance FromHKT F' (Const x) a where
   fromHKT' (F' x) = Const x
 
 instance {-# OVERLAPPABLE #-} ((f $~ x) ~ (f x)) => FromHKT F' f x where
@@ -63,7 +63,7 @@ instance ToHKT F' Identity x where
 instance (Functor f, ToHKT F' f (g $~ x), ToHKT F' g x) => ToHKT F' (Compose (f :: Type -> Type) (g :: Type -> Type)) x where
   toHKT' (Compose x) = F' $ unF' . toHKT' $ fmap (unF' . toHKT') x
 
-instance ToHKT F' (Const x) x where
+instance ToHKT F' (Const x) a where
   toHKT' (Const x) = F' x
 
 instance {-# OVERLAPPABLE #-} ((f $~ x) ~ (f x)) => ToHKT F' f x where
