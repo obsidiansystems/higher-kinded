@@ -396,6 +396,14 @@ instance
 
 
 
+pureHKD
+  :: forall hkd hkt f.
+     ( FunctorHKD hkd hkt f f
+     )
+  => (forall a. f a)
+  -> hkd f
+pureHKD zero = mapHKD @hkd @hkt @f @f (const zero) undefined
+
 transformHKD
   :: forall hkd hkt1 hkt2 f g f_hkd_f f_hkd_g g_hkd_g.
      ( Functor f
@@ -475,7 +483,7 @@ instance
       :: forall f.
          (forall a. f a)
       -> (HKD structure hkt) f
-    bpure zero = mapHKD @(HKD structure hkt) @hkt @f @f (const zero) undefined
+    bpure zero = pureHKD @(HKD structure hkt) @hkt @f zero
 
     bprod
       :: forall f g.
