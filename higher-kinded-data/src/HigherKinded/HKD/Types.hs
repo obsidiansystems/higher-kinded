@@ -68,16 +68,6 @@ type family GUnNewtypeHKD_ rep where
 
 --------------------------------------------------------------------------------
 
-type HKDWithDefault tag d = d $< tag
-
-infixr 0 $<
-type ($<) :: (k1 -> k2) -> k1 -> k3
-type family ($<) d tag where
-  ($<) d tag = d tag
-  ($<) d tag = d
-
---------------------------------------------------------------------------------
-
 instance GenericHKD' structure hkt f => Generic (HKD structure hkt f) where
   type Rep (HKD structure hkt f) = HKD_ structure hkt f
   from = phantom . unGHKD
