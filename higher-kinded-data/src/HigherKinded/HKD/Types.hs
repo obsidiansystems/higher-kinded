@@ -405,7 +405,7 @@ transformHKD
   => (forall x. f x -> g x)
   -> f_hkd_f
   -> g_hkd_g
-transformHKD f = hoistHKT @hkt1 @f @g @(hkd g) f . fmapHKT @hkt1 @f (mapHKD @hkd @hkt2 f) --fmapTransformT @hkt1 @f @g @(hkd f) @(hkd g) f (mapHKD @hkd @hkt2 f)
+transformHKD f = hoistHKT @hkt1 @f @g @(hkd g) f . fmapHKT @hkt1 @f (mapHKD @hkd @hkt2 f)
 
 
 

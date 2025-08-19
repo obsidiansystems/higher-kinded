@@ -29,7 +29,13 @@ import HigherKinded.HKD
 
 
 
-type F f x = f $~ x
+type F structure = (|>) structure
+
+type (|>) structure = HKD structure Applied
+
+
+
+type Apply f x = f $~ x
 
 infixr 0 $~
 type ($~) :: (k1 -> k2) -> k1 -> k3
@@ -42,148 +48,212 @@ type family ($~) f x where
 
 
 
-newtype F' f x = F' { unF' :: f $~ x }
+type (:$~) = Applied
+
+newtype Applied f x = Applied { unApplied :: f $~ x }
   deriving stock (Generic)
 
 
-instance FromHKT F' Identity x where
-  fromHKT' (F' x) = Identity x
+instance FromHKT Applied Identity x where
+  fromHKT' (Applied x) = Identity x
 
-instance (Functor f, FromHKT F' f (g $~ x), FromHKT F' g x) => FromHKT F' (Compose (f :: Type -> Type) (g :: Type -> Type)) x where
-  fromHKT' (F' x) = Compose $ fmap (fromHKT' . F') $ (fromHKT' . F') $ x
+instance (Functor f, FromHKT Applied f (g $~ x), FromHKT Applied g x) => FromHKT Applied (Compose (f :: Type -> Type) (g :: Type -> Type)) x where
+  fromHKT' (Applied x) = Compose $ fmap (fromHKT' . Applied) $ (fromHKT' . Applied) $ x
 
-instance FromHKT F' (Const x) a where
-  fromHKT' (F' x) = Const x
+instance FromHKT Applied (Const x) a where
+  fromHKT' (Applied x) = Const x
 
-instance FromHKT F' (Op x) y where
-  fromHKT' (F' x) = Op x
+instance FromHKT Applied (Op x) y where
+  fromHKT' (Applied x) = Op x
 
-instance {-# OVERLAPPABLE #-} ((f $~ x) ~ (f x)) => FromHKT F' f x where
-  fromHKT' (F' x) = x
+instance {-# OVERLAPPABLE #-} ((f $~ x) ~ (f x)) => FromHKT Applied f x where
+  fromHKT' (Applied x) = x
 
 
-instance ToHKT F' Identity x where
-  toHKT' (Identity x) = F' x
+instance ToHKT Applied Identity x where
+  toHKT' (Identity x) = Applied x
 
-instance (Functor f, ToHKT F' f (g $~ x), ToHKT F' g x) => ToHKT F' (Compose (f :: Type -> Type) (g :: Type -> Type)) x where
-  toHKT' (Compose x) = F' $ unF' . toHKT' $ fmap (unF' . toHKT') x
+instance (Functor f, ToHKT Applied f (g $~ x), ToHKT Applied g x) => ToHKT Applied (Compose (f :: Type -> Type) (g :: Type -> Type)) x where
+  toHKT' (Compose x) = Applied $ unApplied . toHKT' $ fmap (unApplied . toHKT') x
 
-instance ToHKT F' (Const x) a where
-  toHKT' (Const x) = F' x
+instance ToHKT Applied (Const x) a where
+  toHKT' (Const x) = Applied x
 
-instance ToHKT F' (Op x) y where
-  toHKT' (Op x) = F' x
+instance ToHKT Applied (Op x) y where
+  toHKT' (Op x) = Applied x
 
-instance {-# OVERLAPPABLE #-} ((f $~ x) ~ (f x)) => ToHKT F' f x where
-  toHKT' = F'
+instance {-# OVERLAPPABLE #-} ((f $~ x) ~ (f x)) => ToHKT Applied f x where
+  toHKT' = Applied
 
 
 instance
     ( Functor f
-    , HKT F' f
+    , HKT Applied f
     )
   =>
-    Functor (F' f)
+    Functor (Applied f)
   where
     fmap f = toHKT' . fmap f . fromHKT' @_ @f
 
 
 
-pattern F
+pattern App
   :: forall (f :: Type -> Type) x f_x.
-     ( f_x ~$ F' f x
+     ( f_x ~$ (f :$~ x)
      )
   => f x
   -> f_x
-pattern F f_x <- (fromF @f @x -> f_x) where
-  F f_x = toF @f @x f_x
+pattern App { unApp } <- (fromApp @f @x -> unApp) where
+  App f_x = toApp @f @x f_x
 
-fromF
+fromApp
   :: forall (f :: Type -> Type) x f_x.
-     ( f_x ~$ F' f x
+     ( f_x ~$ (f :$~ x)
      )
   => f_x
   -> f x
-fromF = fromHKT @F' @f @x
+fromApp = fromHKT @Applied @f @x
 
-toF
+toApp
   :: forall (f :: Type -> Type) x f_x.
-     ( f_x ~$ F' f x
+     ( f_x ~$ (f :$~ x)
      )
   => f x
   -> f_x
-toF = toHKT @F' @f @x
+toApp = toHKT @Applied @f @x
 
 
-fmapF
+
+fmapApp
   :: forall x y f f_x f_y.
      ( Functor f
-     , f_x ~$ F' f x
-     , f_y ~$ F' f y
+     , f_x ~$ (f :$~ x)
+     , f_y ~$ (f :$~ y)
      )
   => (x -> y)
   -> f_x
   -> f_y
-fmapF = fmapHKT @F' @f @x @y
+fmapApp = fmapHKT @Applied @f @x @y
 
-hoistF
+hoistApp
   :: forall
        x
        (f :: Type -> Type)
        (g :: Type -> Type)
        f_x g_x.
-     ( f_x ~$ F' f x
-     , g_x ~$ F' g x
+     ( f_x ~$ (f :$~ x)
+     , g_x ~$ (g :$~ x)
      )
   => (forall a. f a -> g a)
   -> f_x
   -> g_x
-hoistF = hoistHKT @F' @f @g @x
+hoistApp = hoistHKT @Applied @f @g @x
 
-transformF
+transformApp
   :: forall
        x y
        (f :: Type -> Type)
        (g :: Type -> Type)
        f_x g_y.
-     ( f_x ~$ F' f x
-     , g_y ~$ F' g y
+     ( f_x ~$ (f :$~ x)
+     , g_y ~$ (g :$~ y)
      )
   => (f x -> g y)
   -> f_x
   -> g_y
-transformF = transformHKT @F' @f @g @x @y
+transformApp = transformHKT @Applied @f @g @x @y
 
 
-traverseF
+
+bitraverseApp
+  :: forall hkd f g h t.
+     ( Applicative t
+     , BiTraversableHKD hkd Applied f g h
+     )
+  => (forall x. f x -> g x -> t (h x))
+  -> hkd f
+  -> hkd g
+  -> t (hkd h)
+bitraverseApp = bitraverseHKD @hkd @Applied @f @g @h
+
+traverseApp
   :: forall hkd f g t.
      ( Applicative t
-     , TraversableHKD hkd F' f g
+     , TraversableHKD hkd Applied f g
      )
   => (forall x. f x -> t (g x))
   -> hkd f
   -> t (hkd g)
-traverseF = traverseHKD @hkd @F' @f @g
+traverseApp = traverseHKD @hkd @Applied @f @g
 
-mapF
+mapApp
   :: forall hkd f g.
-     ( FunctorHKD hkd F' f g
+     ( FunctorHKD hkd Applied f g
      )
   => (forall x. f x -> g x)
   -> hkd f
   -> hkd g
-mapF = mapHKD @hkd @F' @f @g
+mapApp = mapHKD @hkd @Applied @f @g
+
+pureApp
+  :: forall hkd f.
+     ( FunctorHKD hkd Applied f f
+     )
+  => (forall a. f a)
+  -> hkd f
+pureApp = pureHKD @hkd @Applied @f
 
 
-transformHKD_F
+
+transformApplied
   :: forall hkd f g f_hkd_f f_hkd_g g_hkd_g.
      ( Functor f
-     , FunctorHKD hkd F' f g
-     , f_hkd_f ~$ F' f (hkd f)
-     , f_hkd_g ~$ F' f (hkd g)
-     , g_hkd_g ~$ F' g (hkd g)
+     , FunctorHKD hkd Applied f g
+     , f_hkd_f ~$ Applied f (hkd f)
+     , f_hkd_g ~$ Applied f (hkd g)
+     , g_hkd_g ~$ Applied g (hkd g)
      )
   => (forall x. f x -> g x)
   -> f_hkd_f
   -> g_hkd_g
-transformHKD_F = transformHKD @hkd @F' @F' @f @g @f_hkd_f @f_hkd_g @g_hkd_g
+transformApplied = transformHKD @hkd @Applied @Applied @f @g @f_hkd_f @f_hkd_g @g_hkd_g
+
+
+
+bitraverseF
+  :: forall structure f g h t.
+     ( Applicative t
+     , BiTraversableHKD (F structure) Applied f g h
+     )
+  => (forall x. f x -> g x -> t (h x))
+  -> structure |> f
+  -> structure |> g
+  -> t (structure |> h)
+bitraverseF = bitraverseApp @(F structure) @f @g @h
+
+traverseF
+  :: forall structure f g t.
+     ( Applicative t
+     , TraversableHKD (F structure) Applied f g
+     )
+  => (forall x. f x -> t (g x))
+  -> structure |> f
+  -> t (structure |> g)
+traverseF = traverseApp @(F structure) @f @g
+
+mapF
+  :: forall structure f g.
+     ( FunctorHKD (F structure) Applied f g
+     )
+  => (forall x. f x -> g x)
+  -> structure |> f
+  -> structure |> g
+mapF = mapApp @(F structure) @f @g
+
+pureF
+  :: forall structure f.
+     ( FunctorHKD (F structure) Applied f f
+     )
+  => (forall a. f a)
+  -> structure |> f
+pureF = pureApp @(F structure) @f
