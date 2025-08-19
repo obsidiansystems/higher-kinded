@@ -29,13 +29,19 @@ import HigherKinded.HKD
 
 
 
-type F structure = (|>) structure
-
 type (|>) structure = HKD structure Applied
 
+type F structure = (|>) structure
+
+pattern F
+  :: forall structure f.
+     Construct (F structure) structure f
+  => f structure
+  -> F structure f
+pattern F { unF } <- (fromHKD @(F structure) @structure @f -> unF) where
+  F x = toHKD @(F structure) @structure @f x
 
 
-type Apply f x = f $~ x
 
 infixr 0 $~
 type ($~) :: (k1 -> k2) -> k1 -> k3
@@ -46,12 +52,14 @@ type family ($~) f x where
   ($~) (Op x) y = y -> x
   ($~) f x = f x
 
+type Apply f x = f $~ x
 
 
-type (:$~) = Applied
 
 newtype Applied f x = Applied { unApplied :: f $~ x }
   deriving stock (Generic)
+
+type (:$~) = Applied
 
 
 instance FromHKT Applied Identity x where
