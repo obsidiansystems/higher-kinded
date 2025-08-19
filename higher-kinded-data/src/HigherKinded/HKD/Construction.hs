@@ -62,6 +62,14 @@ pattern SomeHKD
 pattern SomeHKD { unSomeHKD } <- (fromHKD @hkd @structure @f -> unSomeHKD) where
   SomeHKD x = toHKD @hkd @structure @f x
 
+pattern HKD
+  :: forall hkt structure f.
+     Construct (HKD structure hkt) structure f
+  => f structure
+  -> HKD structure hkt f
+pattern HKD { unHKD } <- (fromHKD @(HKD structure hkt) @structure @f -> unHKD) where
+  HKD x = toHKD @(HKD structure hkt) @structure @f x
+
 
 
 instance ConstructHKD' structure hkt f => Construct (HKD structure hkt) structure f where
