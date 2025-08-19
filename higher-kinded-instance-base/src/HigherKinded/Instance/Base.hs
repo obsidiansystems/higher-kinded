@@ -184,6 +184,16 @@ bitraverseApp
   -> t (hkd h)
 bitraverseApp = bitraverseHKD @hkd @Applied @f @g @h
 
+zipApp
+  :: forall hkd f g h.
+     ( ZippableHKD hkd Applied f g h
+     )
+  => (forall a. f a -> g a -> h a)
+  -> hkd f
+  -> hkd g
+  -> hkd h
+zipApp = zipHKD @hkd @Applied @f @g @h
+
 traverseApp
   :: forall hkd f g t.
      ( Applicative t
@@ -238,6 +248,16 @@ bitraverseF
   -> structure |> g
   -> t (structure |> h)
 bitraverseF = bitraverseApp @(F structure) @f @g @h
+
+zipF
+  :: forall structure f g h.
+     ( ZippableHKD (F structure) Applied f g h
+     )
+  => (forall a. f a -> g a -> h a)
+  -> structure |> f
+  -> structure |> g
+  -> structure |> h
+zipF = zipApp @(F structure) @f @g @h
 
 traverseF
   :: forall structure f g t.
