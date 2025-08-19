@@ -15,7 +15,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module HigherKinded.Instance.F where
+module HigherKinded.Instance.Base where
 
 import Data.Functor.Compose
 import Data.Functor.Const
