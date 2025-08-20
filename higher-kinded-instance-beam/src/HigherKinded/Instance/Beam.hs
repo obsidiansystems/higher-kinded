@@ -29,7 +29,7 @@ module HigherKinded.Instance.Beam
 
 import Data.Functor.Identity
 import Data.Kind
-import Data.Some
+--import Data.Some
 import Database.Beam.Schema.Tables as Beam
 import GHC.Generics (Generic)
 
@@ -143,7 +143,7 @@ pureBeamed = pureBeam @(Beamed structure) @f
 
 type Beam :: (Type -> Type) -> Type -> Type
 type family Beam f a where
-  Beam f (Some t) = t f
+  --Beam f (Some t) = t f
   Beam f a = Columnar f a
 
 

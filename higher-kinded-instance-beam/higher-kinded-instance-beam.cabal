@@ -84,7 +84,7 @@ library
                     , beam-core
                     , higher-kinded-types
                     , higher-kinded-data
-                    , some
+                    --, some
 
     -- Directories containing source files.
     hs-source-dirs:   src
