@@ -36,6 +36,218 @@ import HigherKinded.HKD
 
 
 
+type Beamed structure = HKD structure Beam'
+
+pattern Beamed
+  :: forall structure f.
+     Construct (Beamed structure) structure f
+  => f structure
+  -> Beamed structure f
+pattern Beamed { unBeamed } <- (fromHKD @(Beamed structure) @structure @f -> unBeamed) where
+  Beamed x = toHKD @(Beamed structure) @structure @f x
+
+
+
+bitraverseBeamed
+  :: forall structure f g h t.
+     ( Applicative t
+     , BiTraversableHKD (Beamed structure) Beam' f g h
+     )
+  => (forall x. f x -> g x -> t (h x))
+  -> Beamed structure f
+  -> Beamed structure g
+  -> t (Beamed structure h)
+bitraverseBeamed = bitraverseBeam @(Beamed structure) @f @g @h
+
+zipBeamed
+  :: forall structure f g h.
+     ( ZippableHKD (Beamed structure) Beam' f g h
+     )
+  => (forall a. f a -> g a -> h a)
+  -> Beamed structure f
+  -> Beamed structure g
+  -> Beamed structure h
+zipBeamed = zipBeam @(Beamed structure) @f @g @h
+
+traverseBeamed
+  :: forall structure f g t.
+     ( Applicative t
+     , TraversableHKD (Beamed structure) Beam' f g
+     )
+  => (forall x. f x -> t (g x))
+  -> Beamed structure f
+  -> t (Beamed structure g)
+traverseBeamed = traverseBeam @(Beamed structure) @f @g
+
+mapBeamed
+  :: forall structure f g.
+     ( FunctorHKD (Beamed structure) Beam' f g
+     )
+  => (forall x. f x -> g x)
+  -> Beamed structure f
+  -> Beamed structure g
+mapBeamed = mapBeam @(Beamed structure) @f @g
+
+pureBeamed
+  :: forall structure f.
+     ( FunctorHKD (Beamed structure) Beam' f f
+     )
+  => (forall a. f a)
+  -> Beamed structure f
+pureBeamed = pureBeam @(Beamed structure) @f
+
+
+
+type Beam :: (Type -> Type) -> Type -> Type
+type family Beam f a where
+  Beam f (Some t) = t f
+  Beam f a = Columnar f a
+
+
+newtype Beam' f a = Beam' { unBeam' :: Beam f a }
+  deriving stock (Generic)
+
+instance {-# OVERLAPPABLE #-} (Beam f a ~ f a) => FromHKT Beam' f a where
+  fromHKT' (Beam' a) = a
+
+instance {-# OVERLAPPABLE #-} (Beam f a ~ f a) => ToHKT Beam' f a where
+  toHKT' = Beam'
+
+
+
+pattern Beam
+  :: forall f a f_a.
+     ( f_a ~$ Beam' f a
+     )
+  => f a
+  -> f_a
+pattern Beam { unBeam } <- (fromBeam @f @a -> unBeam) where
+  Beam f_a = toBeam @f @a f_a
+
+fromBeam
+  :: forall f a f_a.
+     ( f_a ~$ Beam' f a
+     )
+  => f_a
+  -> f a
+fromBeam = fromHKT @Beam' @f @a
+
+toBeam
+  :: forall f a f_a.
+     ( f_a ~$ Beam' f a
+     )
+  => f a
+  -> f_a
+toBeam = toHKT @Beam' @f @a
+
+
+
+fmapBeam
+  :: forall x y f f_x f_y.
+     ( Functor f
+     , f_x ~$ Beam' f x
+     , f_y ~$ Beam' f y
+     )
+  => (x -> y)
+  -> f_x
+  -> f_y
+fmapBeam = fmapHKT @Beam' @f @x @y
+
+hoistBeam
+  :: forall
+       x
+       (f :: Type -> Type)
+       (g :: Type -> Type)
+       f_x g_x.
+     ( f_x ~$ Beam' f x
+     , g_x ~$ Beam' g x
+     )
+  => (forall a. f a -> g a)
+  -> f_x
+  -> g_x
+hoistBeam = hoistHKT @Beam' @f @g @x
+
+transformBeam
+  :: forall
+       x y
+       (f :: Type -> Type)
+       (g :: Type -> Type)
+       f_x g_y.
+     ( f_x ~$ Beam' f x
+     , g_y ~$ Beam' g y
+     )
+  => (f x -> g y)
+  -> f_x
+  -> g_y
+transformBeam = transformHKT @Beam' @f @g @x @y
+
+
+
+bitraverseBeam
+  :: forall hkd f g h t.
+     ( Applicative t
+     , BiTraversableHKD hkd Beam' f g h
+     )
+  => (forall x. f x -> g x -> t (h x))
+  -> hkd f
+  -> hkd g
+  -> t (hkd h)
+bitraverseBeam = bitraverseHKD @hkd @Beam' @f @g @h
+
+zipBeam
+  :: forall hkd f g h.
+     ( ZippableHKD hkd Beam' f g h
+     )
+  => (forall a. f a -> g a -> h a)
+  -> hkd f
+  -> hkd g
+  -> hkd h
+zipBeam = zipHKD @hkd @Beam' @f @g @h
+
+traverseBeam
+  :: forall hkd f g t.
+     ( Applicative t
+     , TraversableHKD hkd Beam' f g
+     )
+  => (forall x. f x -> t (g x))
+  -> hkd f
+  -> t (hkd g)
+traverseBeam = traverseHKD @hkd @Beam' @f @g
+
+mapBeam
+  :: forall hkd f g.
+     ( FunctorHKD hkd Beam' f g
+     )
+  => (forall x. f x -> g x)
+  -> hkd f
+  -> hkd g
+mapBeam = mapHKD @hkd @Beam' @f @g
+
+pureBeam
+  :: forall hkd f.
+     ( FunctorHKD hkd Beam' f f
+     )
+  => (forall a. f a)
+  -> hkd f
+pureBeam = pureHKD @hkd @Beam' @f
+
+
+
+transformBeam'
+  :: forall hkd f g f_hkd_f f_hkd_g g_hkd_g.
+     ( Functor f
+     , FunctorHKD hkd Beam' f g
+     , f_hkd_f ~$ Beam' f (hkd f)
+     , f_hkd_g ~$ Beam' f (hkd g)
+     , g_hkd_g ~$ Beam' g (hkd g)
+     )
+  => (forall x. f x -> g x)
+  -> f_hkd_f
+  -> g_hkd_g
+transformBeam' = transformHKD @hkd @Beam' @Beam' @f @g @f_hkd_f @f_hkd_g @g_hkd_g
+
+
+
 deriving stock instance (Generic (Columnar' f a))
 
 unColumnar' :: Columnar' f a -> Columnar f a
@@ -82,7 +294,7 @@ pattern Columnar
      )
   => f a
   -> f_a
-pattern Columnar f_a <- (fromColumnar @f @a -> f_a) where
+pattern Columnar { unColumnar } <- (fromColumnar @f @a -> unColumnar) where
   Columnar f_a = toColumnar @f @a f_a
 
 fromColumnar
@@ -102,39 +314,70 @@ toColumnar
 toColumnar = toHKT @Columnar' @f @a
 
 
+
 fmapColumnar
-  :: forall a b f f_a f_b.
+  :: forall x y f f_x f_y.
      ( Functor f
-     , f_a ~$ Columnar' f a
-     , f_b ~$ Columnar' f b
+     , f_x ~$ Columnar' f x
+     , f_y ~$ Columnar' f y
      )
-  => (a -> b)
-  -> f_a
-  -> f_b
-fmapColumnar = fmapHKT @Columnar' @f @a @b
+  => (x -> y)
+  -> f_x
+  -> f_y
+fmapColumnar = fmapHKT @Columnar' @f @x @y
 
 hoistColumnar
-  :: forall a f g f_a g_a.
-     ( f_a ~$ Columnar' f a
-     , g_a ~$ Columnar' g a
+  :: forall
+       x
+       (f :: Type -> Type)
+       (g :: Type -> Type)
+       f_x g_x.
+     ( f_x ~$ Columnar' f x
+     , g_x ~$ Columnar' g x
      )
-  => (forall x. f x -> g x)
-  -> f_a
-  -> g_a
-hoistColumnar = hoistHKT @Columnar' @f @g @a
+  => (forall a. f a -> g a)
+  -> f_x
+  -> g_x
+hoistColumnar = hoistHKT @Columnar' @f @g @x
 
 transformColumnar
-  :: forall a b f g f_a g_b.
-     ( f_a ~$ Columnar' f a
-     , g_b ~$ Columnar' g b
+  :: forall
+       x y
+       (f :: Type -> Type)
+       (g :: Type -> Type)
+       f_x g_y.
+     ( f_x ~$ Columnar' f x
+     , g_y ~$ Columnar' g y
      )
-  => (f a -> g b)
-  -> f_a
-  -> g_b
-transformColumnar = transformHKT @Columnar' @f @g @a @b
+  => (f x -> g y)
+  -> f_x
+  -> g_y
+transformColumnar = transformHKT @Columnar' @f @g @x @y
 
 
-traverseColumnars
+
+bitraverseColumnar
+  :: forall hkd f g h t.
+     ( Applicative t
+     , BiTraversableHKD hkd Columnar' f g h
+     )
+  => (forall x. f x -> g x -> t (h x))
+  -> hkd f
+  -> hkd g
+  -> t (hkd h)
+bitraverseColumnar = bitraverseHKD @hkd @Columnar' @f @g @h
+
+zipColumnar
+  :: forall hkd f g h.
+     ( ZippableHKD hkd Columnar' f g h
+     )
+  => (forall a. f a -> g a -> h a)
+  -> hkd f
+  -> hkd g
+  -> hkd h
+zipColumnar = zipHKD @hkd @Columnar' @f @g @h
+
+traverseColumnar
   :: forall hkd f g t.
      ( Applicative t
      , TraversableHKD hkd Columnar' f g
@@ -142,19 +385,28 @@ traverseColumnars
   => (forall x. f x -> t (g x))
   -> hkd f
   -> t (hkd g)
-traverseColumnars = traverseHKD @hkd @Columnar' @f @g
+traverseColumnar = traverseHKD @hkd @Columnar' @f @g
 
-mapColumnars
+mapColumnar
   :: forall hkd f g.
      ( FunctorHKD hkd Columnar' f g
      )
   => (forall x. f x -> g x)
   -> hkd f
   -> hkd g
-mapColumnars = mapHKD @hkd @Columnar' @f @g
+mapColumnar = mapHKD @hkd @Columnar' @f @g
+
+pureColumnar
+  :: forall hkd f.
+     ( FunctorHKD hkd Columnar' f f
+     )
+  => (forall a. f a)
+  -> hkd f
+pureColumnar = pureHKD @hkd @Columnar' @f
 
 
-transformColumnars
+
+transformColumnar'
   :: forall hkd f g f_hkd_f f_hkd_g g_hkd_g.
      ( Functor f
      , FunctorHKD hkd Columnar' f g
@@ -165,114 +417,4 @@ transformColumnars
   => (forall x. f x -> g x)
   -> f_hkd_f
   -> g_hkd_g
-transformColumnars = transformHKD @hkd @Columnar' @Columnar' @f @g @f_hkd_f @f_hkd_g @g_hkd_g
-
-
-
-type Beamed :: (Type -> Type) -> Type -> Type
-type family Beamed f a where
-  Beamed f (Some t) = t f
-  Beamed f a = Columnar f a
-
-
-newtype Beamed' f a = Beamed' { unBeamed' :: Beamed f a }
-  deriving stock (Generic)
-
-instance {-# OVERLAPPABLE #-} (Beamed f a ~ f a) => FromHKT Beamed' f a where
-  fromHKT' (Beamed' a) = a
-
-instance {-# OVERLAPPABLE #-} (Beamed f a ~ f a) => ToHKT Beamed' f a where
-  toHKT' = Beamed'
-
-
-
-pattern Beamed
-  :: forall f a f_a.
-     ( f_a ~$ Beamed' f a
-     )
-  => f a
-  -> f_a
-pattern Beamed f_a <- (fromBeamed @f @a -> f_a) where
-  Beamed f_a = toBeamed @f @a f_a
-
-fromBeamed
-  :: forall f a f_a.
-     ( f_a ~$ Beamed' f a
-     )
-  => f_a
-  -> f a
-fromBeamed = fromHKT @Beamed' @f @a
-
-toBeamed
-  :: forall f a f_a.
-     ( f_a ~$ Beamed' f a
-     )
-  => f a
-  -> f_a
-toBeamed = toHKT @Beamed' @f @a
-
-
-fmapBeamed
-  :: forall a b f f_a f_b.
-     ( Functor f
-     , f_a ~$ Beamed' f a
-     , f_b ~$ Beamed' f b
-     )
-  => (a -> b)
-  -> f_a
-  -> f_b
-fmapBeamed = fmapHKT @Beamed' @f @a @b
-
-hoistBeamed
-  :: forall a f g f_a g_a.
-     ( f_a ~$ Beamed' f a
-     , g_a ~$ Beamed' g a
-     )
-  => (forall x. f x -> g x)
-  -> f_a
-  -> g_a
-hoistBeamed = hoistHKT @Beamed' @f @g @a
-
-transformBeamed
-  :: forall a b f g f_a g_b.
-     ( f_a ~$ Beamed' f a
-     , g_b ~$ Beamed' g b
-     )
-  => (f a -> g b)
-  -> f_a
-  -> g_b
-transformBeamed = transformHKT @Beamed' @f @g @a @b
-
-
-traverseBeamed
-  :: forall hkd f g t.
-     ( Applicative t
-     , TraversableHKD hkd Beamed' f g
-     )
-  => (forall x. f x -> t (g x))
-  -> hkd f
-  -> t (hkd g)
-traverseBeamed = traverseHKD @hkd @Beamed' @f @g
-
-mapBeamed
-  :: forall hkd f g.
-     ( FunctorHKD hkd Beamed' f g
-     )
-  => (forall x. f x -> g x)
-  -> hkd f
-  -> hkd g
-mapBeamed = mapHKD @hkd @Beamed' @f @g
-
-
-transformHKD_Beamed
-  :: forall hkd f g f_hkd_f f_hkd_g g_hkd_g.
-     ( Functor f
-     , FunctorHKD hkd Beamed' f g
-     , f_hkd_f ~$ Beamed' f (hkd f)
-     , f_hkd_g ~$ Beamed' f (hkd g)
-     , g_hkd_g ~$ Beamed' g (hkd g)
-     )
-  => (forall x. f x -> g x)
-  -> f_hkd_f
-  -> g_hkd_g
-transformHKD_Beamed = transformHKD @hkd @Beamed' @Beamed' @f @g @f_hkd_f @f_hkd_g @g_hkd_g
+transformColumnar' = transformHKD @hkd @Columnar' @Columnar' @f @g @f_hkd_f @f_hkd_g @g_hkd_g
