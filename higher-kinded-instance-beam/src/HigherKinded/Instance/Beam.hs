@@ -6,6 +6,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
@@ -28,7 +29,7 @@ module HigherKinded.Instance.Beam
 import Data.Functor.Identity
 import Data.Kind
 import Data.Some
-import Database.Beam.Schema.Tables
+import Database.Beam.Schema.Tables as Beam
 import GHC.Generics (Generic)
 
 import HigherKinded.HKT
@@ -45,6 +46,47 @@ pattern Beamed
   -> Beamed structure f
 pattern Beamed { unBeamed } <- (fromHKD @(Beamed structure) @structure @f -> unBeamed) where
   Beamed x = toHKD @(Beamed structure) @structure @f x
+
+
+instance BeamableHKD structure Beam' => Beamable (Beamed structure)
+
+
+class
+    ( GTableSkeleton (HKD_ structure Beam' Ignored)
+    , forall f g h. GZipTablesHKD structure Beam' f g h
+    )
+  => BeamableHKD structure hkt
+
+instance
+    ( GTableSkeleton (HKD_ structure Beam' Ignored)
+    , forall f g h. GZipTablesHKD structure Beam' f g h
+    )
+  => BeamableHKD structure hkt
+
+
+class
+    ( GZipTables f g h
+        (HKD_ structure hkt Beam.Exposed)
+        (HKD_ structure hkt f)
+        (HKD_ structure hkt g)
+        (HKD_ structure hkt h)
+    , GenericHKD' structure hkt f
+    , GenericHKD' structure hkt g
+    , GenericHKD' structure hkt h
+    )
+  => GZipTablesHKD structure hkt f g h
+
+instance
+    ( GZipTables f g h
+        (HKD_ structure hkt Beam.Exposed)
+        (HKD_ structure hkt f)
+        (HKD_ structure hkt g)
+        (HKD_ structure hkt h)
+    , GenericHKD' structure hkt f
+    , GenericHKD' structure hkt g
+    , GenericHKD' structure hkt h
+    )
+  => GZipTablesHKD structure hkt f g h
 
 
 
