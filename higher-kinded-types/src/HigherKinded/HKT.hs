@@ -70,7 +70,6 @@ type family GUnHKT rep where
 _UnHKT' :: HKT' t_f_a => Iso' (UnHKT t_f_a) t_f_a
 _UnHKT' = from _HKT'
 
-{-# COMPLETE HKT' #-}
 pattern HKT'
   :: forall t f a f_a.
      ( f_a ~$ t f a
@@ -90,7 +89,6 @@ type family IsHKT t_f_a = r | r -> t_f_a where
 
 
 
-{-# COMPLETE HKT #-}
 pattern HKT
   :: forall t f a f_a.
      ( f_a ~$ t f a

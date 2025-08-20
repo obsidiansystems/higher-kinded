@@ -54,7 +54,6 @@ class Construct (hkd :: (Type -> Type) -> Type) (structure :: Type) (f :: Type -
   fromHKD :: hkd f -> f structure
   toHKD :: f structure -> hkd f
 
-{-# COMPLETE SomeHKD #-}
 pattern SomeHKD
   :: forall hkd structure f.
      Construct hkd structure f
@@ -63,7 +62,6 @@ pattern SomeHKD
 pattern SomeHKD { unSomeHKD } <- (fromHKD @hkd @structure @f -> unSomeHKD) where
   SomeHKD x = toHKD @hkd @structure @f x
 
-{-# COMPLETE HKD #-}
 pattern HKD
   :: forall hkt structure f.
      Construct (HKD structure hkt) structure f

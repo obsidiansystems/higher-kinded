@@ -40,7 +40,6 @@ import HigherKinded.HKD
 
 type Beamed structure = HKD structure Beam'
 
-{-# COMPLETE Beamed #-}
 pattern Beamed
   :: forall structure f.
      Construct (Beamed structure) structure f
@@ -166,7 +165,6 @@ instance {-# OVERLAPPABLE #-} (Beam f a ~ Columnar f a, ToHKT Columnar' f a) => 
   toHKT' = Beam' . unColumnar' . toHKT' @Columnar' @f @a
 
 
-{-# COMPLETE Beam #-}
 pattern Beam
   :: forall f a f_a.
      ( f_a ~$ Beam' f a
@@ -340,7 +338,6 @@ instance {-# OVERLAPPING #-} (Beamable hkd, HKT Columnar' f, HKT Columnar' g, HK
 
 
 
-{-# COMPLETE Columnar #-}
 pattern Columnar
   :: forall f a f_a.
      ( f_a ~$ Columnar' f a
