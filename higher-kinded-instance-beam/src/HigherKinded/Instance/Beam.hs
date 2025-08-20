@@ -1,4 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -48,9 +49,9 @@ pattern Beamed { unBeamed } <- (fromHKD @(Beamed structure) @structure @f -> unB
   Beamed x = toHKD @(Beamed structure) @structure @f x
 
 
+#if MIN_VERSION_beam_core(0,10,3)
 instance BeamableHKD structure Beam' => Beamable (Beamed structure)
 
-
 class
     ( GTableSkeleton (HKD_ structure Beam' Ignored)
     , forall f g h. GZipTablesHKD structure Beam' f g h
@@ -62,7 +63,6 @@ instance
     , forall f g h. GZipTablesHKD structure Beam' f g h
     )
   => BeamableHKD structure hkt
-
 
 class
     ( GZipTables f g h
@@ -87,6 +87,7 @@ instance
     , GenericHKD' structure hkt h
     )
   => GZipTablesHKD structure hkt f g h
+#endif
 
 
 
