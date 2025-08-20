@@ -151,11 +151,11 @@ newtype Beam' f a = Beam' { unBeam' :: Beam f a }
   deriving stock (Generic)
 
 
-instance (Construct t (t Identity) f, Functor f) => FromHKT Beam' f (Some (t :: (Type -> Type) -> Type)) where
-  fromHKT' (Beam' t) = Some @t @Identity <$> fromHKD t
-
-instance (forall f. Construct t (t f) Identity) => ToHKT Beam' Identity (Some (t :: (Type -> Type) -> Type)) where
-  toHKT' (Identity s) = Beam' $ foldSome (toHKD . Identity) s
+--instance (Construct t (t Identity) f, Functor f) => FromHKT Beam' f (Some (t :: (Type -> Type) -> Type)) where
+--  fromHKT' (Beam' t) = Some @t @Identity <$> fromHKD t
+--
+--instance (forall f. Construct t (t f) Identity) => ToHKT Beam' Identity (Some (t :: (Type -> Type) -> Type)) where
+--  toHKT' (Identity s) = Beam' $ foldSome (toHKD . Identity) s
 
 
 instance {-# OVERLAPPABLE #-} (Beam f a ~ Columnar f a, FromHKT Columnar' f a) => FromHKT Beam' f a where
