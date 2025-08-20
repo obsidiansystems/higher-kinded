@@ -33,6 +33,7 @@ type (|>) structure = HKD structure Applied
 
 type F structure = (|>) structure
 
+{-# COMPLETE F #-}
 pattern F
   :: forall structure f.
      Construct (F structure) structure f
@@ -155,6 +156,7 @@ instance
 
 
 
+{-# COMPLETE App #-}
 pattern App
   :: forall (f :: Type -> Type) x f_x.
      ( f_x ~$ (f :$~ x)
