@@ -43,6 +43,56 @@ pattern F { unF } <- (fromHKD @(F structure) @structure @f -> unF) where
 
 
 
+bitraverseF
+  :: forall structure f g h t.
+     ( Applicative t
+     , BiTraversableHKD (F structure) Applied f g h
+     )
+  => (forall x. f x -> g x -> t (h x))
+  -> structure |> f
+  -> structure |> g
+  -> t (structure |> h)
+bitraverseF = bitraverseApp @(F structure) @f @g @h
+
+zipF
+  :: forall structure f g h.
+     ( ZippableHKD (F structure) Applied f g h
+     )
+  => (forall a. f a -> g a -> h a)
+  -> structure |> f
+  -> structure |> g
+  -> structure |> h
+zipF = zipApp @(F structure) @f @g @h
+
+traverseF
+  :: forall structure f g t.
+     ( Applicative t
+     , TraversableHKD (F structure) Applied f g
+     )
+  => (forall x. f x -> t (g x))
+  -> structure |> f
+  -> t (structure |> g)
+traverseF = traverseApp @(F structure) @f @g
+
+mapF
+  :: forall structure f g.
+     ( FunctorHKD (F structure) Applied f g
+     )
+  => (forall x. f x -> g x)
+  -> structure |> f
+  -> structure |> g
+mapF = mapApp @(F structure) @f @g
+
+pureF
+  :: forall structure f.
+     ( FunctorHKD (F structure) Applied f f
+     )
+  => (forall a. f a)
+  -> structure |> f
+pureF = pureApp @(F structure) @f
+
+
+
 infixr 0 $~
 type ($~) :: (k1 -> k2) -> k1 -> k3
 type family ($~) f x where
@@ -235,53 +285,3 @@ transformApplied
   -> f_hkd_f
   -> g_hkd_g
 transformApplied = transformHKD @hkd @Applied @Applied @f @g @f_hkd_f @f_hkd_g @g_hkd_g
-
-
-
-bitraverseF
-  :: forall structure f g h t.
-     ( Applicative t
-     , BiTraversableHKD (F structure) Applied f g h
-     )
-  => (forall x. f x -> g x -> t (h x))
-  -> structure |> f
-  -> structure |> g
-  -> t (structure |> h)
-bitraverseF = bitraverseApp @(F structure) @f @g @h
-
-zipF
-  :: forall structure f g h.
-     ( ZippableHKD (F structure) Applied f g h
-     )
-  => (forall a. f a -> g a -> h a)
-  -> structure |> f
-  -> structure |> g
-  -> structure |> h
-zipF = zipApp @(F structure) @f @g @h
-
-traverseF
-  :: forall structure f g t.
-     ( Applicative t
-     , TraversableHKD (F structure) Applied f g
-     )
-  => (forall x. f x -> t (g x))
-  -> structure |> f
-  -> t (structure |> g)
-traverseF = traverseApp @(F structure) @f @g
-
-mapF
-  :: forall structure f g.
-     ( FunctorHKD (F structure) Applied f g
-     )
-  => (forall x. f x -> g x)
-  -> structure |> f
-  -> structure |> g
-mapF = mapApp @(F structure) @f @g
-
-pureF
-  :: forall structure f.
-     ( FunctorHKD (F structure) Applied f f
-     )
-  => (forall a. f a)
-  -> structure |> f
-pureF = pureApp @(F structure) @f
