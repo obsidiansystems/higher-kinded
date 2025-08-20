@@ -151,12 +151,19 @@ type family Beam f a where
 newtype Beam' f a = Beam' { unBeam' :: Beam f a }
   deriving stock (Generic)
 
-instance {-# OVERLAPPABLE #-} (Beam f a ~ f a) => FromHKT Beam' f a where
-  fromHKT' (Beam' a) = a
 
-instance {-# OVERLAPPABLE #-} (Beam f a ~ f a) => ToHKT Beam' f a where
-  toHKT' = Beam'
+instance (Construct t (t Identity) f, Functor f) => FromHKT Beam' f (Some (t :: (Type -> Type) -> Type)) where
+  fromHKT' (Beam' (SomeHKD t)) = Some @t @Identity <$> t
 
+instance (forall f. Construct t (t f) Identity) => ToHKT Beam' Identity (Some (t :: (Type -> Type) -> Type)) where
+  toHKT' (Identity s) = Beam' $ foldSome (SomeHKD . Identity) s
+
+
+instance {-# OVERLAPPABLE #-} (Beam f a ~ Columnar f a, FromHKT Columnar' f a) => FromHKT Beam' f a where
+  fromHKT' = fromHKT' @Columnar' @f @a . Columnar' . unBeam'
+
+instance {-# OVERLAPPABLE #-} (Beam f a ~ Columnar f a, ToHKT Columnar' f a) => ToHKT Beam' f a where
+  toHKT' = Beam' . unColumnar' . toHKT' @Columnar' @f @a
 
 
 {-# COMPLETE Beam #-}
