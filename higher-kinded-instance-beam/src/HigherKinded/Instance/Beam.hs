@@ -30,6 +30,8 @@ module HigherKinded.Instance.Beam
 
 import Data.Functor.Identity
 import Data.Kind
+import Database.Beam.Backend.SQL
+import Database.Beam.Backend.Types as Beam
 import Database.Beam.Schema.Tables as Beam
 import GHC.Generics (Generic)
 
@@ -161,6 +163,9 @@ deriving newtype instance Show (t Identity) => Show (SomeBeam t)
 deriving newtype instance FromJSON (t Identity) => FromJSON (SomeBeam t)
 deriving newtype instance ToJSON (t Identity) => ToJSON (SomeBeam t)
 #endif
+
+deriving newtype instance HasSqlValueSyntax syntax (t Identity) => HasSqlValueSyntax syntax (SomeBeam t)
+deriving newtype instance (Beam.BeamBackend be, FromBackendRow be (t Identity)) => FromBackendRow be (SomeBeam t)
 
 
 newtype Beam' f a = Beam' { unBeam' :: Beam f a }
