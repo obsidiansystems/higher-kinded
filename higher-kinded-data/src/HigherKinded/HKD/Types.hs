@@ -38,11 +38,14 @@ import Data.Proxy
 import GHC.Generics hiding (from, to)
 import GHC.Generics qualified as G
 import GHC.TypeLits (KnownSymbol, symbolVal)
-import Test.QuickCheck.Arbitrary (Arbitrary (..), CoArbitrary (..))
-import Test.QuickCheck.Function (Function (..), functionMap)
 
 #ifdef VERSION_aeson
 import Data.Aeson (FromJSON, ToJSON, GFromJSON, GToJSON', Value, Zero)
+#endif
+
+#ifdef VERSION_QuickCheck
+import Test.QuickCheck.Arbitrary (Arbitrary (..), CoArbitrary (..))
+import Test.QuickCheck.Function (Function (..), functionMap)
 #endif
 
 import HigherKinded.HKT
@@ -115,6 +118,7 @@ instance
 
 --------------------------------------------------------------------------------
 
+#ifdef VERSION_QuickCheck
 instance (Arbitrary tuple, GToTuple (HKD_ structure hkt f) tuple)
     => Arbitrary (HKD structure hkt f) where
   arbitrary = fmap (GHKD . gfromTuple) arbitrary
@@ -126,6 +130,7 @@ instance (CoArbitrary tuple, GToTuple (HKD_ structure hkt f) tuple)
 instance (Function tuple, Tuple structure hkt f tuple)
     => Function (HKD structure hkt f) where
   function = functionMap toTuple fromTuple
+#endif
 
 --------------------------------------------------------------------------------
 

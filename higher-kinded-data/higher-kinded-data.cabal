@@ -57,6 +57,10 @@ flag with-aeson
   default: True
   manual: True
 
+flag with-quickcheck
+  default: True
+  manual: True
+
 common warnings
     ghc-options: -Wall
                  -Wno-type-defaults
@@ -93,10 +97,12 @@ library
                     , generic-lens-core
                     , higher-kinded-types
                     , lens
-                    , QuickCheck
 
     if flag(with-aeson)
       build-depends:  aeson
+
+    if flag(with-quickcheck)
+      build-depends:  QuickCheck
 
     -- Directories containing source files.
     hs-source-dirs:   src
