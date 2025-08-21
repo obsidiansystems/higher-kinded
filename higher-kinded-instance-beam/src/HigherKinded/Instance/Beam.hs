@@ -5,6 +5,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE QuantifiedConstraints #-}
@@ -29,7 +30,6 @@ module HigherKinded.Instance.Beam
 
 import Data.Functor.Identity
 import Data.Kind
---import Data.Some
 import Database.Beam.Schema.Tables as Beam
 import GHC.Generics (Generic)
 
@@ -143,19 +143,26 @@ pureBeamed = pureBeam @(Beamed structure) @f
 
 type Beam :: (Type -> Type) -> Type -> Type
 type family Beam f a where
-  --Beam f (Some t) = t f
+  Beam f (SomeBeam t) = t f
   Beam f a = Columnar f a
+
+newtype SomeBeam t = SomeBeam { unSomeBeam :: t Identity }
+
+deriving newtype instance Generic (t Identity) => Generic (SomeBeam t)
+deriving newtype instance Eq (t Identity) => Eq (SomeBeam t)
+deriving newtype instance Ord (t Identity) => Ord (SomeBeam t)
+deriving newtype instance Show (t Identity) => Show (SomeBeam t)
 
 
 newtype Beam' f a = Beam' { unBeam' :: Beam f a }
   deriving stock (Generic)
 
 
---instance (Construct t (t Identity) f, Functor f) => FromHKT Beam' f (Some (t :: (Type -> Type) -> Type)) where
---  fromHKT' (Beam' t) = Some @t @Identity <$> fromHKD t
---
---instance (forall f. Construct t (t f) Identity) => ToHKT Beam' Identity (Some (t :: (Type -> Type) -> Type)) where
---  toHKT' (Identity s) = Beam' $ foldSome (toHKD . Identity) s
+instance {-# OVERLAPPING #-} (Construct t (t Identity) f, Functor f) => FromHKT Beam' f (SomeBeam t) where
+  fromHKT' (Beam' t) = SomeBeam <$> fromHKD t
+
+instance {-# OVERLAPPING #-} (Construct t (t Identity) f, Functor f) => ToHKT Beam' f (SomeBeam t) where
+  toHKT' f_s = Beam' $ toHKD $ unSomeBeam <$> f_s
 
 
 instance {-# OVERLAPPABLE #-} (Beam f a ~ Columnar f a, FromHKT Columnar' f a) => FromHKT Beam' f a where
