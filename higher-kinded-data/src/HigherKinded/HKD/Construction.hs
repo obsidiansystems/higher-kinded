@@ -54,6 +54,30 @@ class Construct (hkd :: (Type -> Type) -> Type) (structure :: Type) (f :: Type -
   fromHKD :: hkd f -> f structure
   toHKD :: f structure -> hkd f
 
+
+
+instance {-# OVERLAPPABLE #-} Construct' hkd structure hkt f => Construct hkd structure f where
+  fromHKD = fmap to . gFromHKD @(Rep structure) @hkt @f . from
+  toHKD = to . gToHKD @(Rep structure) @hkt @f . fmap from
+
+class
+    ( Applicative f
+    , Generic structure
+    , GConstruct (Rep structure) hkt f
+    , Generic (hkd f)
+    , Rep (hkd f) ~ GHKD_ (Rep structure) hkt f
+    )
+  => Construct' hkd structure hkt f
+
+instance
+    ( Applicative f
+    , Generic structure
+    , GConstruct (Rep structure) hkt f
+    , Generic (hkd f)
+    , Rep (hkd f) ~ GHKD_ (Rep structure) hkt f
+    )
+  => Construct' hkd structure hkt f
+
 pattern SomeHKD
   :: forall hkd structure f.
      Construct hkd structure f
@@ -62,33 +86,22 @@ pattern SomeHKD
 pattern SomeHKD { unSomeHKD } <- (fromHKD @hkd @structure @f -> unSomeHKD) where
   SomeHKD x = toHKD @hkd @structure @f x
 
-pattern HKD
-  :: forall hkt structure f.
-     Construct (HKD structure hkt) structure f
-  => f structure
-  -> HKD structure hkt f
-pattern HKD { unHKD } <- (fromHKD @(HKD structure hkt) @structure @f -> unHKD) where
-  HKD x = toHKD @(HKD structure hkt) @structure @f x
-
 
 
 instance ConstructHKD' structure hkt f => Construct (HKD structure hkt) structure f where
   fromHKD = fmap to . gFromHKD @(Rep structure) @hkt @f . unGHKD
   toHKD = GHKD . gToHKD @(Rep structure) @hkt @f . fmap from
 
-class
-    ( Applicative f
-    , Generic structure
-    , GConstruct (Rep structure) hkt f
-    )
-  => ConstructHKD' structure hkt f
+class Construct' (HKD structure hkt) structure hkt f => ConstructHKD' structure hkt f
+instance Construct' (HKD structure hkt) structure hkt f => ConstructHKD' structure hkt f
 
-instance
-    ( Applicative f
-    , Generic structure
-    , GConstruct (Rep structure) hkt f
-    )
-  => ConstructHKD' structure hkt f
+pattern HKD
+  :: forall hkt structure f.
+     ConstructHKD' structure hkt f
+  => f structure
+  -> HKD structure hkt f
+pattern HKD { unHKD } <- (fromHKD @(HKD structure hkt) @structure @f -> unHKD) where
+  HKD x = toHKD @(HKD structure hkt) @structure @f x
 
 
 
