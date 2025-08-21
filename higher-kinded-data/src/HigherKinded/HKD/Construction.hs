@@ -108,7 +108,8 @@ instance (Applicative f, GConstruct left hkt f, GConstruct right hkt f)
 
 instance
     ( Applicative f
-    , HKT hkt f
+    , FromHKT hkt f inner
+    , ToHKT hkt f inner
     , Generic (hkt f inner)
     , UnHKT (hkt f inner) ~ GUnHKT (Rep (hkt f inner))
     , Rep (hkt f inner) ~ (D1 d (C1 c (S1 s' (Rec0 x))))
