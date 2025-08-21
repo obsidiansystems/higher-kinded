@@ -33,6 +33,10 @@ import Data.Kind
 import Database.Beam.Schema.Tables as Beam
 import GHC.Generics (Generic)
 
+#ifdef VERSION_aeson
+import Data.Aeson (FromJSON, ToJSON)
+#endif
+
 import HigherKinded.HKT
 import HigherKinded.HKD
 
@@ -152,6 +156,11 @@ deriving newtype instance Generic (t Identity) => Generic (SomeBeam t)
 deriving newtype instance Eq (t Identity) => Eq (SomeBeam t)
 deriving newtype instance Ord (t Identity) => Ord (SomeBeam t)
 deriving newtype instance Show (t Identity) => Show (SomeBeam t)
+
+#ifdef VERSION_aeson
+deriving newtype instance FromJSON (t Identity) => FromJSON (SomeBeam t)
+deriving newtype instance ToJSON (t Identity) => ToJSON (SomeBeam t)
+#endif
 
 
 newtype Beam' f a = Beam' { unBeam' :: Beam f a }

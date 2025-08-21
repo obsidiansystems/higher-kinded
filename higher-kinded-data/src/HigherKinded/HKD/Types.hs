@@ -1,4 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DefaultSignatures #-}
@@ -39,6 +40,10 @@ import GHC.Generics qualified as G
 import GHC.TypeLits (KnownSymbol, symbolVal)
 import Test.QuickCheck.Arbitrary (Arbitrary (..), CoArbitrary (..))
 import Test.QuickCheck.Function (Function (..), functionMap)
+
+#ifdef VERSION_aeson
+import Data.Aeson (FromJSON, ToJSON, GFromJSON, GToJSON', Value, Zero)
+#endif
 
 import HigherKinded.HKT
 
@@ -93,6 +98,20 @@ instance (Semigroup tuple, Generic xs, Tuple xs hkt f tuple)
 instance (Monoid tuple, Generic xs, Tuple xs hkt f tuple)
     => Monoid (HKD xs hkt f) where
   mempty = fromTuple mempty
+
+--------------------------------------------------------------------------------
+
+#ifdef VERSION_aeson
+instance
+  ( GenericHKD' structure hkt f
+  , GToJSON' Value Zero (GHKD_ (Rep structure) hkt f)
+  ) => ToJSON (HKD structure hkt f)
+
+instance
+  ( GenericHKD' structure hkt f
+  , GFromJSON Zero (GHKD_ (Rep structure) hkt f)
+  ) => FromJSON (HKD structure hkt f)
+#endif
 
 --------------------------------------------------------------------------------
 

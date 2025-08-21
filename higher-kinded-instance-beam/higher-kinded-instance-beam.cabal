@@ -53,6 +53,10 @@ extra-doc-files:    CHANGELOG.md
 -- Extra source files to be distributed with the package, such as examples, or a tutorial module.
 -- extra-source-files:
 
+flag with-aeson
+  default: True
+  manual: True
+
 common warnings
     ghc-options: -Wall
                  -Wno-type-defaults
@@ -84,6 +88,9 @@ library
                     , beam-core
                     , higher-kinded-types
                     , higher-kinded-data
+
+    if flag(with-aeson)
+      build-depends:  aeson
 
     -- Directories containing source files.
     hs-source-dirs:   src
