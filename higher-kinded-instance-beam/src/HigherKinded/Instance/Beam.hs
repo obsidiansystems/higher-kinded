@@ -48,11 +48,11 @@ type Beamed structure = HKD structure Beam'
 
 pattern Beamed
   :: forall structure f.
-     Construct (Beamed structure) structure f
+     Construct structure (Beamed structure) Beam' f
   => f structure
   -> Beamed structure f
-pattern Beamed { unBeamed } <- (fromHKD @(Beamed structure) @structure @f -> unBeamed) where
-  Beamed x = toHKD @(Beamed structure) @structure @f x
+pattern Beamed { unBeamed } <- (fromHKD @structure @(Beamed structure) @Beam' @f -> unBeamed) where
+  Beamed x = toHKD @structure @(Beamed structure) @Beam' @f x
 
 
 #if MIN_VERSION_beam_core(0,10,3)
@@ -172,11 +172,11 @@ newtype Beam' f a = Beam' { unBeam' :: Beam f a }
   deriving stock (Generic)
 
 
-instance {-# OVERLAPPING #-} (Construct t (t Identity) f, Functor f) => FromHKT Beam' f (SomeBeam t) where
-  fromHKT' (Beam' t) = SomeBeam <$> fromHKD t
+instance {-# OVERLAPPING #-} (Construct (t Identity) t Beam' f, Functor f) => FromHKT Beam' f (SomeBeam t) where
+  fromHKT' (Beam' t) = SomeBeam <$> fromHKD @_ @_ @Beam' t
 
-instance {-# OVERLAPPING #-} (Construct t (t Identity) f, Functor f) => ToHKT Beam' f (SomeBeam t) where
-  toHKT' f_s = Beam' $ toHKD $ unSomeBeam <$> f_s
+instance {-# OVERLAPPING #-} (Construct (t Identity) t Beam' f, Functor f) => ToHKT Beam' f (SomeBeam t) where
+  toHKT' f_s = Beam' $ toHKD @_ @_ @Beam' $ unSomeBeam <$> f_s
 
 
 instance {-# OVERLAPPABLE #-} (Beam f a ~ Columnar f a, FromHKT Columnar' f a) => FromHKT Beam' f a where

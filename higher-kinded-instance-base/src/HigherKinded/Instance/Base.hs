@@ -35,11 +35,11 @@ type F structure = (|>) structure
 
 pattern F
   :: forall structure f.
-     Construct (F structure) structure f
+     Construct structure (F structure) Applied f
   => f structure
   -> F structure f
-pattern F { unF } <- (fromHKD @(F structure) @structure @f -> unF) where
-  F x = toHKD @(F structure) @structure @f x
+pattern F { unF } <- (fromHKD @structure @(F structure) @Applied @f -> unF) where
+  F x = toHKD @structure @(F structure) @Applied @f x
 
 
 

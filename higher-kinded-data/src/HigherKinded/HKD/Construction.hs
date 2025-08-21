@@ -50,13 +50,13 @@ import HigherKinded.HKT
 -- These two methods also satisfy the round-tripping property:
 --
 -- prop> construct (deconstruct x) == [ x :: (Int, Bool, String) ]
-class Construct (hkd :: (Type -> Type) -> Type) (structure :: Type) (f :: Type -> Type) where
+class Construct  (structure :: Type) (hkd :: (Type -> Type) -> Type) (hkt :: (Type -> Type) -> Type -> Type) (f :: Type -> Type) where
   fromHKD :: hkd f -> f structure
   toHKD :: f structure -> hkd f
 
 
 
-instance {-# OVERLAPPABLE #-} Construct' hkd structure hkt f => Construct hkd structure f where
+instance {-# OVERLAPPABLE #-} Construct' structure hkd hkt f => Construct structure hkd hkt f where
   fromHKD = fmap to . gFromHKD @(Rep structure) @hkt @f . from
   toHKD = to . gToHKD @(Rep structure) @hkt @f . fmap from
 
@@ -67,7 +67,7 @@ class
     , Generic (hkd f)
     , Rep (hkd f) ~ GHKD_ (Rep structure) hkt f
     )
-  => Construct' hkd structure hkt f
+  => Construct' structure hkd hkt f
 
 instance
     ( Applicative f
@@ -76,32 +76,32 @@ instance
     , Generic (hkd f)
     , Rep (hkd f) ~ GHKD_ (Rep structure) hkt f
     )
-  => Construct' hkd structure hkt f
+  => Construct' structure hkd hkt f
 
 pattern SomeHKD
-  :: forall hkd structure f.
-     Construct hkd structure f
+  :: forall structure hkd hkt f.
+     Construct structure hkd hkt f
   => f structure
   -> hkd f
-pattern SomeHKD { unSomeHKD } <- (fromHKD @hkd @structure @f -> unSomeHKD) where
-  SomeHKD x = toHKD @hkd @structure @f x
+pattern SomeHKD unSomeHKD <- (fromHKD @structure @hkd @hkt @f -> unSomeHKD) where
+  SomeHKD x = toHKD @structure @hkd @hkt @f x
 
 
 
-instance ConstructHKD' structure hkt f => Construct (HKD structure hkt) structure f where
+instance ConstructHKD' structure hkt f => Construct structure (HKD structure hkt) hkt f where
   fromHKD = fmap to . gFromHKD @(Rep structure) @hkt @f . unGHKD
   toHKD = GHKD . gToHKD @(Rep structure) @hkt @f . fmap from
 
-class Construct' (HKD structure hkt) structure hkt f => ConstructHKD' structure hkt f
-instance Construct' (HKD structure hkt) structure hkt f => ConstructHKD' structure hkt f
+class Construct' structure (HKD structure hkt) hkt f => ConstructHKD' structure hkt f
+instance Construct' structure (HKD structure hkt) hkt f => ConstructHKD' structure hkt f
 
 pattern HKD
   :: forall hkt structure f.
      ConstructHKD' structure hkt f
   => f structure
   -> HKD structure hkt f
-pattern HKD { unHKD } <- (fromHKD @(HKD structure hkt) @structure @f -> unHKD) where
-  HKD x = toHKD @(HKD structure hkt) @structure @f x
+pattern HKD { unHKD } <- (fromHKD @structure @(HKD structure hkt) @hkt @f -> unHKD) where
+  HKD x = toHKD @structure @(HKD structure hkt) @hkt @f x
 
 
 
