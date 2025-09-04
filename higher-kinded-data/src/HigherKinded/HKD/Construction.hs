@@ -21,101 +21,64 @@ import Control.Lens (view)
 import Data.Kind
 import GHC.Generics
 
-import HigherKinded.HKD.Types
+import HigherKinded.HKD.Base
 import HigherKinded.HKT
 
 
 
--- | When working with the HKD representation, it is useful to have a way to
--- convert to and from our original type. To do this, we can:
---
--- * @construct@ the original type from our HKD representation, and
---
--- * @deconstruct@ the original type /into/ our HKD representation.
---
--- As an example, we can try (unsuccessfully) to construct an @(Int, Bool)@
--- tuple from an unpopulated partial structure.
---
--- >>> :set -XTypeApplications
--- >>> import Data.Monoid (Last)
---
--- >>> construct (mempty @(HKD (Int, Bool) Last))
--- Last {getLast = Nothing}
---
--- We can also /deconstruct/ a tuple into a partial structure:
---
--- >>> deconstruct @[] ("Hello", True)
--- (,) ["Hello"] [True]
---
--- These two methods also satisfy the round-tripping property:
---
--- prop> construct (deconstruct x) == [ x :: (Int, Bool, String) ]
-class Construct  (structure :: Type) (hkd :: (Type -> Type) -> Type) (hkt :: (Type -> Type) -> Type -> Type) (f :: Type -> Type) where
+class ConstructHKD (hkd :: (Type -> Type) -> Type) (structure :: Type) (hkt :: (Type -> Type) -> Type -> Type) (f :: Type -> Type) where
   fromHKD :: hkd f -> f structure
   toHKD :: f structure -> hkd f
 
-
-
-instance {-# OVERLAPPABLE #-} Construct' structure hkd hkt f => Construct structure hkd hkt f where
+instance {-# OVERLAPPABLE #-} GConstructHKD hkd structure hkt f => ConstructHKD hkd structure hkt f where
   fromHKD = fmap to . gFromHKD @(Rep structure) @hkt @f . from
   toHKD = to . gToHKD @(Rep structure) @hkt @f . fmap from
 
 class
     ( Applicative f
     , Generic structure
-    , GConstruct (Rep structure) hkt f
+    , GConstructHKDRep (Rep structure) hkt f
     , Generic (hkd f)
     , Rep (hkd f) ~ GHKD_ (Rep structure) hkt f
     )
-  => Construct' structure hkd hkt f
+  => GConstructHKD hkd structure hkt f
 
 instance
     ( Applicative f
     , Generic structure
-    , GConstruct (Rep structure) hkt f
+    , GConstructHKDRep (Rep structure) hkt f
     , Generic (hkd f)
     , Rep (hkd f) ~ GHKD_ (Rep structure) hkt f
     )
-  => Construct' structure hkd hkt f
+  => GConstructHKD hkd structure hkt f
 
-pattern SomeHKD
-  :: forall structure hkd hkt f.
-     Construct structure hkd hkt f
+pattern HKD
+  :: forall hkd structure hkt f.
+     ConstructHKD hkd structure hkt f
   => f structure
   -> hkd f
-pattern SomeHKD unSomeHKD <- (fromHKD @structure @hkd @hkt @f -> unSomeHKD) where
-  SomeHKD x = toHKD @structure @hkd @hkt @f x
+pattern HKD unHKD <- (fromHKD @hkd @structure @hkt @f -> unHKD) where
+  HKD x = toHKD @hkd @structure @hkt @f x
 
 
 
-instance ConstructHKD' structure hkt f => Construct structure (HKD structure hkt) hkt f where
+instance GConstructHKD (HKD structure hkt) structure hkt f => ConstructHKD (HKD structure hkt) structure hkt f where
   fromHKD = fmap to . gFromHKD @(Rep structure) @hkt @f . unGHKD
   toHKD = GHKD . gToHKD @(Rep structure) @hkt @f . fmap from
 
-class Construct' structure (HKD structure hkt) hkt f => ConstructHKD' structure hkt f
-instance Construct' structure (HKD structure hkt) hkt f => ConstructHKD' structure hkt f
-
-pattern HKD
-  :: forall hkt structure f.
-     ConstructHKD' structure hkt f
-  => f structure
-  -> HKD structure hkt f
-pattern HKD { unHKD } <- (fromHKD @structure @(HKD structure hkt) @hkt @f -> unHKD) where
-  HKD x = toHKD @structure @(HKD structure hkt) @hkt @f x
 
 
-
-class GConstruct (rep :: Type -> Type) (hkt :: ((Type -> Type) -> Type -> Type)) (f :: Type -> Type) where
+class GConstructHKDRep (rep :: Type -> Type) (hkt :: ((Type -> Type) -> Type -> Type)) (f :: Type -> Type) where
   gFromHKD :: GHKD_ rep hkt f () -> f (rep ())
   gToHKD :: f (rep ()) -> GHKD_ rep hkt f ()
 
-instance (Functor f, GConstruct inner hkt f)
-    => GConstruct (M1 index meta inner) hkt f where
+instance (Functor f, GConstructHKDRep inner hkt f)
+    => GConstructHKDRep (M1 index meta inner) hkt f where
   gFromHKD = fmap M1 . gFromHKD @inner @hkt @f . unM1
   gToHKD = M1 . gToHKD @inner @hkt @f . fmap unM1
 
-instance (Applicative f, GConstruct left hkt f, GConstruct right hkt f)
-    => GConstruct (left :*: right) hkt f where
+instance (Applicative f, GConstructHKDRep left hkt f, GConstructHKDRep right hkt f)
+    => GConstructHKDRep (left :*: right) hkt f where
   gFromHKD (l :*: r) = (:*:) <$> gFromHKD @left @hkt @f l <*> gFromHKD @right @hkt @f r
   gToHKD lr = gToHKD @left @hkt @f ((\(l :*: _) -> l) <$> lr) :*: gToHKD @right @hkt @f ((\(_ :*: r) -> r) <$> lr)
 
@@ -128,7 +91,7 @@ instance
     , Rep (hkt f inner) ~ (D1 d (C1 c (S1 s' (Rec0 x))))
     )
   =>
-    GConstruct (K1 index inner) hkt f
+    GConstructHKDRep (K1 index inner) hkt f
   where
     gFromHKD = fmap K1 . fromHKT' @hkt @f @inner . view _UnHKT' . unK1
     gToHKD = K1 . (view _HKT' . toHKT' @hkt @f @inner) . fmap unK1

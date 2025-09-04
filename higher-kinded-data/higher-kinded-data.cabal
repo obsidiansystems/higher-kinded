@@ -80,9 +80,12 @@ library
 
     -- Modules exported by the library.
     exposed-modules:  HigherKinded.HKD
+                      HigherKinded.HKD.Base
                       HigherKinded.HKD.Build
+                      HigherKinded.HKD.Class
                       HigherKinded.HKD.Construction
-                      HigherKinded.HKD.Types
+                      HigherKinded.HKD.Internal.Exposed
+                      HigherKinded.HKD.Internal.Void
 
     -- Modules included in this library but not exported.
     -- other-modules:

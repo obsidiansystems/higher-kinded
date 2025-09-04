@@ -48,11 +48,11 @@ type Beamed structure = HKD structure Beam'
 
 pattern Beamed
   :: forall structure f.
-     Construct structure (Beamed structure) Beam' f
+     ConstructHKD (Beamed structure) structure Beam' f
   => f structure
   -> Beamed structure f
-pattern Beamed { unBeamed } <- (fromHKD @structure @(Beamed structure) @Beam' @f -> unBeamed) where
-  Beamed x = toHKD @structure @(Beamed structure) @Beam' @f x
+pattern Beamed { unBeamed } <- (fromHKD @(Beamed structure) @structure @Beam' @f -> unBeamed) where
+  Beamed x = toHKD @(Beamed structure) @structure @Beam' @f x
 
 
 #if MIN_VERSION_beam_core(0,10,3)
@@ -76,9 +76,9 @@ class
         (HKD_ structure hkt f)
         (HKD_ structure hkt g)
         (HKD_ structure hkt h)
-    , GenericHKD' structure hkt f
-    , GenericHKD' structure hkt g
-    , GenericHKD' structure hkt h
+    , GenericHKD_ structure hkt f
+    , GenericHKD_ structure hkt g
+    , GenericHKD_ structure hkt h
     )
   => GZipTablesHKD structure hkt f g h
 
@@ -88,9 +88,9 @@ instance
         (HKD_ structure hkt f)
         (HKD_ structure hkt g)
         (HKD_ structure hkt h)
-    , GenericHKD' structure hkt f
-    , GenericHKD' structure hkt g
-    , GenericHKD' structure hkt h
+    , GenericHKD_ structure hkt f
+    , GenericHKD_ structure hkt g
+    , GenericHKD_ structure hkt h
     )
   => GZipTablesHKD structure hkt f g h
 #endif
@@ -172,10 +172,10 @@ newtype Beam' f a = Beam' { unBeam' :: Beam f a }
   deriving stock (Generic)
 
 
-instance {-# OVERLAPPING #-} (Construct (t Identity) t Beam' f, Functor f) => FromHKT Beam' f (SomeBeamed t) where
+instance {-# OVERLAPPING #-} (ConstructHKD t (t Identity) Beam' f, Functor f) => FromHKT Beam' f (SomeBeamed t) where
   fromHKT' (Beam' t) = SomeBeamed <$> fromHKD @_ @_ @Beam' t
 
-instance {-# OVERLAPPING #-} (Construct (t Identity) t Beam' f, Functor f) => ToHKT Beam' f (SomeBeamed t) where
+instance {-# OVERLAPPING #-} (ConstructHKD t (t Identity) Beam' f, Functor f) => ToHKT Beam' f (SomeBeamed t) where
   toHKT' f_s = Beam' $ toHKD @_ @_ @Beam' $ unSomeBeamed <$> f_s
 
 
@@ -352,10 +352,18 @@ instance
 instance {-# OVERLAPPING #-} (Beamable hkd, HKT Columnar' f, HKT Columnar' g, HKT Columnar' h) => BiTraversableHKD hkd Columnar' f g h where
   bitraverseHKD combine f g =
     zipBeamFieldsM
-      (\(f' :: Columnar' f a)
-        (g' :: Columnar' g a)
-      -> fmap (toHKT' @Columnar' @h @a) $ combine (fromHKT' @Columnar' @f @a f') (fromHKT' @Columnar' @g @a g')
+      (\(f' :: Columnar' f x)
+        (g' :: Columnar' g x)
+      -> fmap (toHKT' @Columnar' @h @x) $ combine (fromHKT' @Columnar' @f @x f') (fromHKT' @Columnar' @g @x g')
       ) f g
+
+instance {-# OVERLAPPING #-} (Beamable hkd, HKT Columnar' f, HKT Columnar' g) => TraversableHKD hkd Columnar' f g where
+  traverseHKD f x =
+    zipBeamFieldsM
+      (\(x' :: Columnar' f x)
+        _
+      -> fmap (toHKT' @Columnar' @g @x) $ f (fromHKT' @Columnar' @f @x x')
+      ) x x
 
 
 

@@ -28,47 +28,17 @@ import GHC.Generics
 import GHC.OverloadedLabels
 import GHC.TypeLits
 
-import HigherKinded.HKD.Types
+import HigherKinded.HKD.Base
 
 
 
--- | With many HKD applications, we're working with types like 'Maybe' where it
--- makes sense for us to start with 'mempty' and add values in as we go.
---
--- This isn't always the case, however: if all the component parts of our type
--- are gathered using some 'IO' action, we'd like to construct something like
--- @HKD MyType IO@, and @IO a@ isn't a 'Monoid' for all types @a@. When this
--- happens, we need to pass in our parameters /when/ we build our structure.
---
--- The 'build' function lets us construct our type by passing explicit values
--- for each parameter:
---
--- >>> :set -XDeriveGeneric -XTypeApplications
---
--- >>> :{
--- data User
---   = User { name :: String, age :: Int, likesDogs :: Bool }
---   deriving Generic
--- :}
---
--- >>> :{
--- test :: _
--- test = build @(HKD User Ap f)
--- :}
--- ...
--- ... Found type wildcard ...
--- ... standing for ...Arg "name" (f String) -> Arg "age" (f Int) -> Arg "likesDogs" (f Bool) -> HKD User Ap f...
--- ...
---
--- Once we call the 'build' function, and indicate the type we want to build,
--- we are free to pick whichever @f@ we like and get to work!
 class Build (hkd :: Type) (k :: Type) | hkd -> k, k -> hkd where
   build :: k
 
 
 
 instance
-    ( BuildHKD' structure hkt f k
+    ( BuildHKD_ structure hkt f k
     , list ~ Rearrange (HKD_ structure hkt f)
     )
   =>
@@ -77,20 +47,20 @@ instance
     build = gbuild @_ @structure @hkt @f (to . gupcast @list @(HKD_ structure hkt f))
 
 class
-    ( GenericHKD' structure hkt f
+    ( GenericHKD_ structure hkt f
     --
     , GUpcast (Rearrange (HKD_ structure hkt f)) (HKD_ structure hkt f)
     , GBuild (Rearrange (HKD_ structure hkt f)) structure hkt f k
     )
-  => BuildHKD' structure hkt f k
+  => BuildHKD_ structure hkt f k
 
 instance
-    ( GenericHKD' structure hkt f
+    ( GenericHKD_ structure hkt f
     --
     , GUpcast (Rearrange (HKD_ structure hkt f)) (HKD_ structure hkt f)
     , GBuild (Rearrange (HKD_ structure hkt f)) structure hkt f k
     )
-  => BuildHKD' structure hkt f k
+  => BuildHKD_ structure hkt f k
 
 
 
