@@ -11,8 +11,8 @@ in {
   shell = {
     packages = ps: with ps; [
       higher-kinded
+      higher-kinded-beam
       higher-kinded-data
-      higher-kinded-instance-beam
       higher-kinded-types
     ];
   };

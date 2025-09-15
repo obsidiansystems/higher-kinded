@@ -21,8 +21,8 @@
 
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module HigherKinded.Instance.Beam
-  ( module HigherKinded.Instance.Beam
+module Database.Beam.HigherKinded
+  ( module Database.Beam.HigherKinded
   , Columnar
   , Columnar'
   ) where
