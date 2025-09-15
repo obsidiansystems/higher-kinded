@@ -37,6 +37,7 @@ type family ($~) f x where
   ($~) (Compose f g) x = f $~ (g $~ x)
   ($~) (Const x) _ = x
   ($~) (Op x) y = y -> x
+  ($~) (Applied f) x = f $~ x
   ($~) f x = f x
 
 type Apply f x = f $~ x
@@ -64,6 +65,9 @@ instance FromHKT Applied (Const x) a where
 instance FromHKT Applied (Op x) y where
   fromHKT' (Applied x) = Op x
 
+instance FromHKT Applied (Applied f) x where
+  fromHKT' (Applied x) = Applied x
+
 instance {-# OVERLAPPABLE #-} ((f $~ x) ~ (f x)) => FromHKT Applied f x where
   fromHKT' (Applied x) = x
 
@@ -82,6 +86,9 @@ instance ToHKT Applied (Const x) a where
 
 instance ToHKT Applied (Op x) y where
   toHKT' (Op x) = Applied x
+
+instance ToHKT Applied (Applied f) x where
+  toHKT' (Applied x) = Applied x
 
 instance {-# OVERLAPPABLE #-} ((f $~ x) ~ (f x)) => ToHKT Applied f x where
   toHKT' = Applied
