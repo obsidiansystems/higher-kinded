@@ -6,12 +6,14 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- | Based on 'Data.Generic.HKD.Named' from package 'higgledy'
 --   by Tom Harding ((c) Tom Harding, 2019, MIT)
@@ -19,6 +21,9 @@
 module HigherKinded.HKD.Build
   ( Build (..)
   , Arg (..)
+  , type (:!)
+  , pattern (:!)
+  , pattern Arg
   , Name (..)
   ) where
 
@@ -90,9 +95,7 @@ instance
   =>
     GBuild (S1 meta rec0) structure hkt f k
   where
-    gbuild fill = \case
-      (Arg inner) -> fill (M1 (K1 inner))
-      ((Name :: Name name) :! inner) -> fill (M1 (K1 inner))
+    gbuild fill (_ :! inner) = fill (M1 (K1 inner))
 
 instance
     ( GBuild right structure hkt f k'
@@ -103,20 +106,30 @@ instance
   =>
     GBuild (left :*: right) structure hkt f k
   where
-    gbuild fill = \case
-      (Arg left) -> gbuild \right -> fill (M1 (K1 left) :*: right)
-      ((Name :: Name name) :! left) -> gbuild \right -> fill (M1 (K1 left) :*: right)
+    gbuild fill (_ :! left) = gbuild \right -> fill (M1 (K1 left) :*: right)
 
 
+
+type (:!) name a = Arg name a
 
 data Arg name a where
-  (:!) :: Name name -> a -> Arg name a
-  Arg :: a -> Arg name a
+  Arg_Named :: Name name -> a -> Arg name a
+  Arg_Arg :: a -> Arg name a
 
 data Name (name :: Symbol) = Name
 
 instance name ~ name' => IsLabel name' (Name name) where
   fromLabel = Name
+
+{-# COMPLETE (:!) #-}
+pattern (:!) :: Name name -> a -> Arg name a
+pattern (:!) name a <- (\case { Arg_Named Name a -> (Name, a); Arg_Arg a -> (Name, a) } -> (name, a)) where
+  (:!) Name a = Arg_Named Name a
+
+{-# COMPLETE Arg #-}
+pattern Arg :: a -> Arg name a
+pattern Arg a <- (\case { Arg_Named Name a -> a; Arg_Arg a -> a } -> a) where
+  Arg a = Arg_Arg a
 
 
 
