@@ -32,6 +32,7 @@ module HigherKinded.HKD.Generic
   ) where
 
 import Data.Function (on)
+import Data.Functor.Const
 import Data.Functor.Contravariant (Contravariant (..), phantom)
 import Data.Functor.Product (Product (..))
 import Data.Kind
@@ -71,7 +72,7 @@ type family GHKD_ structureRep hkt f = (res :: Type -> Type) where
   GHKD_ (left :+: right) hkt f = GHKD_ left hkt f :+: GHKD_ right hkt f
   GHKD_ (K1 index (SubHKD subHKD)) hkt f = K1 index (HKD subHKD hkt f)
   GHKD_ (K1 index (t (SubHKD subHKD))) hkt f = K1 index (HKD (HKD subHKD Applied t) hkt f)
-  GHKD_ (K1 index (Surgery' s t)) hkt f = K1 index (HKD (Surgery' s t) hkt f)
+  GHKD_ (K1 index (Applied k t)) hkt f = K1 index (GHKD_ (Rep (k $~ t)) hkt f ())
   GHKD_ (K1 index value) hkt f = K1 index (UnHKT (hkt f value))
 
 --------------------------------------------------------------------------------
@@ -83,7 +84,7 @@ type WithMods :: Type -> [Type] -> Type
 type WithMods t mods = Surgeries mods t
 
 type (.~) :: Symbol -> Type -> Type
-type (.~) field t = field %~ Surgery' (CopyRep t)
+type (.~) field t = field %~ Applied (Const t)
 
 #ifdef VERSION_aeson
 deriving newtype instance ToJSON t => ToJSON (SubHKD t)

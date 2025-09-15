@@ -20,7 +20,6 @@ module HigherKinded.HKD.Construction where
 import Control.Lens (view)
 import Data.Kind
 import GHC.Generics
-import Generic.Data.Microsurgery
 
 import HigherKinded.HKT
 import HigherKinded.HKT.Base
@@ -120,14 +119,15 @@ instance
 
 instance
     ( Functor f
-    , ConstructHKD (HKD (Surgery' s t) hkt) (Surgery' s t) hkt f
-    , GHKD_ (K1 index (Surgery' s t)) hkt f ~ K1 index (HKD (Surgery' s t) hkt f)
+    , Generic (k $~ t)
+    , GConstructHKDRep (Rep (k $~ t)) hkt f
+    , GHKD_ (K1 index (Applied k t)) hkt f ~ K1 index (GHKD_ (Rep (k $~ t)) hkt f ())
     )
   =>
-    GConstructHKDRep (K1 index (Surgery' s t)) hkt f
+    GConstructHKDRep (K1 index (Applied k t)) hkt f
   where
-    gFromHKD = fmap K1 . fromHKD @(HKD (Surgery' s t) hkt) @(Surgery' s t) @hkt @f . unK1
-    gToHKD = K1 . toHKD @(HKD (Surgery' s t) hkt) @(Surgery' s t) @hkt @f . fmap unK1
+    gFromHKD = fmap (K1 . Applied . to) . gFromHKD @(Rep (k $~ t)) @hkt @f . unK1
+    gToHKD = K1 . gToHKD @(Rep (k $~ t)) @hkt @f . fmap (from . unApplied . unK1)
 
 instance {-# OVERLAPPABLE #-}
     ( Applicative f
