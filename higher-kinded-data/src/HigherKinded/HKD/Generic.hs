@@ -24,7 +24,7 @@
 -- | Based on 'HKD' from 'Data.Generic.HKD.Types from package 'higgledy'
 --   by Tom Harding ((c) Tom Harding, 2019, MIT)
 
-module HigherKinded.HKD.Base where
+module HigherKinded.HKD.Generic where
 
 import Data.Function (on)
 import Data.Functor.Contravariant (Contravariant (..), phantom)

@@ -22,7 +22,7 @@ import Data.Kind
 import Data.Monoid (Ap(..))
 import GHC.Generics
 
-import HigherKinded.HKD.Base
+import HigherKinded.HKD.Generic
 import HigherKinded.HKT
 
 

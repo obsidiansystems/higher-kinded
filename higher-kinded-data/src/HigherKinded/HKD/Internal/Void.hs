@@ -8,7 +8,7 @@ module HigherKinded.HKD.Internal.Void where
 
 import GHC.Generics (Generic)
 
-import HigherKinded.HKD.Base
+import HigherKinded.HKD.Generic
 
 {-
   Note [Uncluttering type signatures]

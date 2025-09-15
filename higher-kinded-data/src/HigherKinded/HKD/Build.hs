@@ -28,7 +28,7 @@ import GHC.Generics
 import GHC.OverloadedLabels
 import GHC.TypeLits
 
-import HigherKinded.HKD.Base
+import HigherKinded.HKD.Generic
 
 
 
