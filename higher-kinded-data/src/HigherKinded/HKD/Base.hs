@@ -8,7 +8,10 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module HigherKinded.HKD.Base where
+module HigherKinded.HKD.Base
+  ( module HigherKinded.HKD.Base
+  , module HigherKinded.HKT.Base
+  ) where
 
 import HigherKinded.HKD.Class
 import HigherKinded.HKD.Construction
