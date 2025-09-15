@@ -30,7 +30,6 @@ import Data.Function (on)
 import Data.Functor.Contravariant (Contravariant (..), phantom)
 import Data.Functor.Product (Product (..))
 import Data.Kind
-import Data.Monoid (Ap(..))
 import Data.Proxy
 import GHC.Generics hiding (from, to)
 import GHC.Generics qualified as G
@@ -47,6 +46,7 @@ import Test.QuickCheck.Function (Function (..), functionMap)
 #endif
 
 import HigherKinded.HKT
+import HigherKinded.HKT.Base
 
 import HigherKinded.HKD.Class
 
@@ -64,9 +64,9 @@ type family GHKD_ structureRep hkt f = (res :: Type -> Type) where
   GHKD_ (M1 index meta inner) hkt f = M1 index meta (GHKD_ inner hkt f)
   GHKD_ (left :*: right) hkt f = GHKD_ left hkt f :*: GHKD_ right hkt f
   GHKD_ (left :+: right) hkt f = GHKD_ left hkt f :+: GHKD_ right hkt f
-  GHKD_ (K1 index (SubHKD (t subHKD))) hkt f = K1 index (HKD (HKD subHKD Ap t) hkt f)
+  GHKD_ (K1 index (SubHKD (t subHKD))) hkt f = K1 index (HKD (HKD subHKD Applied t) hkt f)
   GHKD_ (K1 index (SubHKD subHKD)) hkt f = K1 index (HKD subHKD hkt f)
-  GHKD_ (K1 index (t (SubHKD subHKD))) hkt f = K1 index (HKD (HKD subHKD Ap t) hkt f)
+  GHKD_ (K1 index (t (SubHKD subHKD))) hkt f = K1 index (HKD (HKD subHKD Applied t) hkt f)
   GHKD_ (K1 index value) hkt f = K1 index (UnHKT (hkt f value))
 
 --------------------------------------------------------------------------------

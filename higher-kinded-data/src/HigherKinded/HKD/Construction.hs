@@ -19,11 +19,12 @@ module HigherKinded.HKD.Construction where
 
 import Control.Lens (view)
 import Data.Kind
-import Data.Monoid (Ap(..))
 import GHC.Generics
 
-import HigherKinded.HKD.Generic
 import HigherKinded.HKT
+import HigherKinded.HKT.Base
+
+import HigherKinded.HKD.Generic
 
 
 
@@ -96,8 +97,8 @@ instance
 
 instance
     ( Functor f
-    , subHKD' ~ HKD subHKD Ap t
-    , ConstructHKD (HKD subHKD Ap) subHKD Ap t
+    , subHKD' ~ HKD subHKD Applied t
+    , ConstructHKD (HKD subHKD Applied) subHKD Applied t
     , ConstructHKD (HKD subHKD' hkt) subHKD' hkt f
     , GHKD_ (K1 index (SubHKD (t subHKD))) hkt f ~ K1 index (HKD subHKD' hkt f)
     )
@@ -105,19 +106,19 @@ instance
     GConstructHKDRep (K1 index (SubHKD (t subHKD))) hkt f
   where
     gFromHKD =
-        fmap (K1 . SubHKD . fromHKD @(HKD subHKD Ap) @subHKD @Ap @t)
+        fmap (K1 . SubHKD . fromHKD @(HKD subHKD Applied) @subHKD @Applied @t)
       . fromHKD @(HKD subHKD' hkt) @subHKD' @hkt @f
       . unK1
     gToHKD =
         K1
       . toHKD @(HKD subHKD' hkt) @subHKD' @hkt @f
-      . fmap (toHKD @(HKD subHKD Ap) @subHKD @Ap @t . unSubHKD . unK1)
+      . fmap (toHKD @(HKD subHKD Applied) @subHKD @Applied @t . unSubHKD . unK1)
 
 instance
     ( Functor f
     , Functor t
-    , subHKD' ~ HKD subHKD Ap t
-    , ConstructHKD (HKD subHKD Ap) subHKD Ap t
+    , subHKD' ~ HKD subHKD Applied t
+    , ConstructHKD (HKD subHKD Applied) subHKD Applied t
     , ConstructHKD (HKD subHKD' hkt) subHKD' hkt f
     , GHKD_ (K1 index (t (SubHKD subHKD))) hkt f ~ K1 index (HKD subHKD' hkt f)
     )
@@ -126,13 +127,13 @@ instance
   where
     gFromHKD =
         fmap (K1 . fmap SubHKD)
-      . fmap (fromHKD @(HKD subHKD Ap) @subHKD @Ap @t)
+      . fmap (fromHKD @(HKD subHKD Applied) @subHKD @Applied @t)
       . fromHKD @(HKD subHKD' hkt) @subHKD' @hkt @f
       . unK1
     gToHKD =
         K1
       . toHKD @(HKD subHKD' hkt) @subHKD' @hkt @f
-      . fmap (toHKD @(HKD subHKD Ap) @subHKD @Ap @t)
+      . fmap (toHKD @(HKD subHKD Applied) @subHKD @Applied @t)
       . fmap (fmap unSubHKD . unK1)
 
 instance {-# OVERLAPPABLE #-}
