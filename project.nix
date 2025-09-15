@@ -12,7 +12,6 @@ in {
     packages = ps: with ps; [
       higher-kinded
       higher-kinded-data
-      higher-kinded-instance-base
       higher-kinded-instance-beam
       higher-kinded-types
     ];

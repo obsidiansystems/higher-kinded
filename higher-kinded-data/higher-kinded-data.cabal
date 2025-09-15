@@ -80,6 +80,7 @@ library
 
     -- Modules exported by the library.
     exposed-modules:  HigherKinded.HKD
+                      HigherKinded.HKD.Base
                       HigherKinded.HKD.Build
                       HigherKinded.HKD.Class
                       HigherKinded.HKD.Construction

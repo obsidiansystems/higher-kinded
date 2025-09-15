@@ -15,7 +15,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module HigherKinded.Instance.Base where
+module HigherKinded.HKD.Base where
 
 import Data.Functor.Compose
 import Data.Functor.Const
@@ -24,8 +24,10 @@ import Data.Functor.Identity
 import Data.Kind
 import GHC.Generics (Generic)
 
+import HigherKinded.HKD.Class
+import HigherKinded.HKD.Construction
+import HigherKinded.HKD.Generic
 import HigherKinded.HKT
-import HigherKinded.HKD
 
 
 
