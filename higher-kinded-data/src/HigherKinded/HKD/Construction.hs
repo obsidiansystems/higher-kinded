@@ -119,15 +119,14 @@ instance
 
 instance
     ( Functor f
-    , Generic (k $~ t)
-    , GConstructHKDRep (Rep (k $~ t)) hkt f
-    , GHKD_ (K1 index (Applied k t)) hkt f ~ K1 index (GHKD_ (Rep (k $~ t)) hkt f ())
+    , GConstructHKDRep (K1 index (k $~ t)) hkt f
+    , GHKD_ (K1 index (Applied k t)) hkt f ~ GHKD_ (K1 index (k $~ t)) hkt f
     )
   =>
     GConstructHKDRep (K1 index (Applied k t)) hkt f
   where
-    gFromHKD = fmap (K1 . Applied . to) . gFromHKD @(Rep (k $~ t)) @hkt @f . unK1
-    gToHKD = K1 . gToHKD @(Rep (k $~ t)) @hkt @f . fmap (from . unApplied . unK1)
+    gFromHKD = fmap (K1 . Applied . unK1) . gFromHKD @(K1 index (k $~ t)) @hkt @f
+    gToHKD = gToHKD @(K1 index (k $~ t)) @hkt @f . fmap (K1 . unApplied . unK1)
 
 instance {-# OVERLAPPABLE #-}
     ( Applicative f
