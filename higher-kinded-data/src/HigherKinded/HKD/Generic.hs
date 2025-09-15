@@ -82,8 +82,8 @@ newtype SubHKD t = SubHKD { unSubHKD :: t }
 type WithMods :: Type -> [Type] -> Type
 type WithMods t mods = Surgeries mods t
 
-type (.~) :: Symbol -> Type -> (Type -> Type)
-type (.~) field t = Surgery' (CopyRep t)
+type (.~) :: Symbol -> Type -> Type
+type (.~) field t = field %~ Surgery' (CopyRep t)
 
 #ifdef VERSION_aeson
 deriving newtype instance ToJSON t => ToJSON (SubHKD t)
