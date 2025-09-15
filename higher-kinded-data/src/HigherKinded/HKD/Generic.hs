@@ -71,7 +71,7 @@ type family GHKD_ structureRep hkt f = (res :: Type -> Type) where
   GHKD_ (left :+: right) hkt f = GHKD_ left hkt f :+: GHKD_ right hkt f
   GHKD_ (K1 index (SubHKD subHKD)) hkt f = K1 index (HKD subHKD hkt f)
   GHKD_ (K1 index (t (SubHKD subHKD))) hkt f = K1 index (HKD (HKD subHKD Applied t) hkt f)
-  GHKD_ (K1 index (FSubHKD (t subHKD))) hkt f = K1 index (HKD (HKD subHKD Applied t) hkt f)
+  GHKD_ (K1 index (Surgery' s t)) hkt f = K1 index (HKD (Surgery' s t) hkt f)
   GHKD_ (K1 index value) hkt f = K1 index (UnHKT (hkt f value))
 
 --------------------------------------------------------------------------------
@@ -79,11 +79,11 @@ type family GHKD_ structureRep hkt f = (res :: Type -> Type) where
 newtype SubHKD t = SubHKD { unSubHKD :: t }
   deriving newtype (Eq, Ord, Show, Generic)
 
-newtype FSubHKD t = FSubHKD { unFSubHKD :: t }
-  deriving newtype (Eq, Ord, Show, Generic)
-
 type WithMods :: Type -> [Type] -> Type
 type WithMods t mods = Surgeries mods t
+
+type (.~) :: Symbol -> Type -> (Type -> Type)
+type (.~) field t = Surgery' (CopyRep t)
 
 #ifdef VERSION_aeson
 deriving newtype instance ToJSON t => ToJSON (SubHKD t)
@@ -91,22 +91,11 @@ deriving newtype instance FromJSON t => FromJSON (SubHKD t)
 
 deriving newtype instance ToJSONKey t => ToJSONKey (SubHKD t)
 deriving newtype instance FromJSONKey t => FromJSONKey (SubHKD t)
-
-
-deriving newtype instance ToJSON t => ToJSON (FSubHKD t)
-deriving newtype instance FromJSON t => FromJSON (FSubHKD t)
-
-deriving newtype instance ToJSONKey t => ToJSONKey (FSubHKD t)
-deriving newtype instance FromJSONKey t => FromJSONKey (FSubHKD t)
 #endif
 
 #ifdef VERSION_QuickCheck
 deriving newtype instance Arbitrary t => Arbitrary (SubHKD t)
 deriving newtype instance CoArbitrary t => CoArbitrary (SubHKD t)
-
-
-deriving newtype instance Arbitrary t => Arbitrary (FSubHKD t)
-deriving newtype instance CoArbitrary t => CoArbitrary (FSubHKD t)
 #endif
 
 --------------------------------------------------------------------------------
