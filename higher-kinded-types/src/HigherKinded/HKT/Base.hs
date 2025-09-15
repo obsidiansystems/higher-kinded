@@ -22,6 +22,7 @@ import Data.Functor.Const
 import Data.Functor.Contravariant
 import Data.Functor.Identity
 import Data.Kind
+import Data.Monoid (Ap(..))
 import GHC.Generics (Generic)
 
 import HigherKinded.HKT
@@ -32,6 +33,7 @@ infixr 0 $~
 type ($~) :: (k1 -> k2) -> k1 -> k3
 type family ($~) f x where
   ($~) Identity x = x
+  ($~) (Ap f) x = f $~ x
   ($~) (Compose f g) x = f $~ (g $~ x)
   ($~) (Const x) _ = x
   ($~) (Op x) y = y -> x
@@ -50,6 +52,9 @@ type (:$~) = Applied
 instance FromHKT Applied Identity x where
   fromHKT' (Applied x) = Identity x
 
+instance (FromHKT Applied f x) => FromHKT Applied (Ap f) x where
+  fromHKT' (Applied x) = Ap $ (fromHKT' @Applied @f @x . Applied) $ x
+
 instance (Functor f, FromHKT Applied f (g $~ x), FromHKT Applied g x) => FromHKT Applied (Compose (f :: Type -> Type) (g :: Type -> Type)) x where
   fromHKT' (Applied x) = Compose $ fmap (fromHKT' . Applied) $ (fromHKT' . Applied) $ x
 
@@ -65,6 +70,9 @@ instance {-# OVERLAPPABLE #-} ((f $~ x) ~ (f x)) => FromHKT Applied f x where
 
 instance ToHKT Applied Identity x where
   toHKT' (Identity x) = Applied x
+
+instance (ToHKT Applied f x) => ToHKT Applied (Ap f) x where
+  toHKT' (Ap f_x) = Applied $ (unApplied . toHKT' @Applied @f @x) $ f_x
 
 instance (Functor f, ToHKT Applied f (g $~ x), ToHKT Applied g x) => ToHKT Applied (Compose (f :: Type -> Type) (g :: Type -> Type)) x where
   toHKT' (Compose x) = Applied $ unApplied . toHKT' $ fmap (unApplied . toHKT') x
