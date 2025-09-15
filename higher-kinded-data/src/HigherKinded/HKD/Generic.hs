@@ -74,13 +74,8 @@ type family GHKD_ structureRep hkt f = (res :: Type -> Type) where
 newtype SubHKD t = SubHKD { unSubHKD :: t }
   deriving newtype (Eq, Ord, Show, Generic)
 
-type WithFields :: Type -> [(Symbol, Type -> Type)] -> Type
-type WithFields t fields = Surgeries (WithFieldSurgeries fields) t
-
-type WithFieldSurgeries :: [(Symbol, Type -> Type)] -> [Type]
-type family WithFieldSurgeries fields where
-  WithFieldSurgeries '[] = '[]
-  WithFieldSurgeries ('(field, f) ': fields) = OnField field f : WithFieldSurgeries fields
+type WithMods :: Type -> [Type] -> Type
+type WithMods t mods = Surgeries mods t
 
 #ifdef VERSION_aeson
 deriving newtype instance ToJSON t => ToJSON (SubHKD t)
