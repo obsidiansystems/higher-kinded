@@ -3,15 +3,18 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE QuantifiedConstraints #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE StandaloneKindSignatures #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
@@ -27,13 +30,15 @@ import Data.Function (on)
 import Data.Functor.Contravariant (Contravariant (..), phantom)
 import Data.Functor.Product (Product (..))
 import Data.Kind
+import Data.Monoid (Ap(..))
 import Data.Proxy
 import GHC.Generics hiding (from, to)
 import GHC.Generics qualified as G
-import GHC.TypeLits (KnownSymbol, symbolVal)
+import GHC.TypeLits
+import Generic.Data.Microsurgery
 
 #ifdef VERSION_aeson
-import Data.Aeson (FromJSON, ToJSON, GFromJSON, GToJSON', Value, Zero)
+import Data.Aeson (FromJSON, ToJSON, FromJSONKey, ToJSONKey, GFromJSON, GToJSON', Value, Zero)
 #endif
 
 #ifdef VERSION_QuickCheck
@@ -59,7 +64,36 @@ type family GHKD_ structureRep hkt f = (res :: Type -> Type) where
   GHKD_ (M1 index meta inner) hkt f = M1 index meta (GHKD_ inner hkt f)
   GHKD_ (left :*: right) hkt f = GHKD_ left hkt f :*: GHKD_ right hkt f
   GHKD_ (left :+: right) hkt f = GHKD_ left hkt f :+: GHKD_ right hkt f
+  GHKD_ (K1 index (SubHKD (t subHKD))) hkt f = K1 index (HKD (HKD subHKD Ap t) hkt f)
+  GHKD_ (K1 index (SubHKD subHKD)) hkt f = K1 index (HKD subHKD hkt f)
+  GHKD_ (K1 index (t (SubHKD subHKD))) hkt f = K1 index (HKD (HKD subHKD Ap t) hkt f)
   GHKD_ (K1 index value) hkt f = K1 index (UnHKT (hkt f value))
+
+--------------------------------------------------------------------------------
+
+newtype SubHKD t = SubHKD { unSubHKD :: t }
+  deriving newtype (Eq, Ord, Show, Generic)
+
+type WithFields :: Type -> [(Symbol, Type -> Type)] -> Type
+type WithFields t fields = Surgeries (WithFieldSurgeries fields) t
+
+type WithFieldSurgeries :: [(Symbol, Type -> Type)] -> [Type]
+type family WithFieldSurgeries fields where
+  WithFieldSurgeries '[] = '[]
+  WithFieldSurgeries ('(field, f) ': fields) = OnField field f : WithFieldSurgeries fields
+
+#ifdef VERSION_aeson
+deriving newtype instance ToJSON t => ToJSON (SubHKD t)
+deriving newtype instance FromJSON t => FromJSON (SubHKD t)
+
+deriving newtype instance ToJSONKey t => ToJSONKey (SubHKD t)
+deriving newtype instance FromJSONKey t => FromJSONKey (SubHKD t)
+#endif
+
+#ifdef VERSION_QuickCheck
+deriving newtype instance Arbitrary t => Arbitrary (SubHKD t)
+deriving newtype instance CoArbitrary t => CoArbitrary (SubHKD t)
+#endif
 
 --------------------------------------------------------------------------------
 

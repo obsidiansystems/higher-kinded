@@ -96,6 +96,7 @@ library
     -- Other library packages from which modules are imported.
     build-depends:    base
                     , barbies
+                    , generic-data
                     , generic-lens
                     , generic-lens-core
                     , higher-kinded-types

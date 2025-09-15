@@ -19,6 +19,7 @@ module HigherKinded.HKD.Construction where
 
 import Control.Lens (view)
 import Data.Kind
+import Data.Monoid (Ap(..))
 import GHC.Generics
 
 import HigherKinded.HKD.Base
@@ -83,11 +84,63 @@ instance (Applicative f, GConstructHKDRep left hkt f, GConstructHKDRep right hkt
   gToHKD lr = gToHKD @left @hkt @f ((\(l :*: _) -> l) <$> lr) :*: gToHKD @right @hkt @f ((\(_ :*: r) -> r) <$> lr)
 
 instance
+    ( Functor f
+    , ConstructHKD (HKD subHKD hkt) subHKD hkt f
+    , GHKD_ (K1 index (SubHKD subHKD)) hkt f ~ K1 index (HKD subHKD hkt f)
+    )
+  =>
+    GConstructHKDRep (K1 index (SubHKD subHKD)) hkt f
+  where
+    gFromHKD = fmap (K1 . SubHKD) . fromHKD @(HKD subHKD hkt) @subHKD @hkt @f . unK1
+    gToHKD = K1 . toHKD @(HKD subHKD hkt) @subHKD @hkt @f . fmap (unSubHKD . unK1)
+
+instance
+    ( Functor f
+    , subHKD' ~ HKD subHKD Ap t
+    , ConstructHKD (HKD subHKD Ap) subHKD Ap t
+    , ConstructHKD (HKD subHKD' hkt) subHKD' hkt f
+    , GHKD_ (K1 index (SubHKD (t subHKD))) hkt f ~ K1 index (HKD subHKD' hkt f)
+    )
+  =>
+    GConstructHKDRep (K1 index (SubHKD (t subHKD))) hkt f
+  where
+    gFromHKD =
+        fmap (K1 . SubHKD . fromHKD @(HKD subHKD Ap) @subHKD @Ap @t)
+      . fromHKD @(HKD subHKD' hkt) @subHKD' @hkt @f
+      . unK1
+    gToHKD =
+        K1
+      . toHKD @(HKD subHKD' hkt) @subHKD' @hkt @f
+      . fmap (toHKD @(HKD subHKD Ap) @subHKD @Ap @t . unSubHKD . unK1)
+
+instance
+    ( Functor f
+    , Functor t
+    , subHKD' ~ HKD subHKD Ap t
+    , ConstructHKD (HKD subHKD Ap) subHKD Ap t
+    , ConstructHKD (HKD subHKD' hkt) subHKD' hkt f
+    , GHKD_ (K1 index (t (SubHKD subHKD))) hkt f ~ K1 index (HKD subHKD' hkt f)
+    )
+  =>
+    GConstructHKDRep (K1 index (t (SubHKD subHKD))) hkt f
+  where
+    gFromHKD =
+        fmap (K1 . fmap SubHKD)
+      . fmap (fromHKD @(HKD subHKD Ap) @subHKD @Ap @t)
+      . fromHKD @(HKD subHKD' hkt) @subHKD' @hkt @f
+      . unK1
+    gToHKD =
+        K1
+      . toHKD @(HKD subHKD' hkt) @subHKD' @hkt @f
+      . fmap (toHKD @(HKD subHKD Ap) @subHKD @Ap @t)
+      . fmap (fmap unSubHKD . unK1)
+
+instance {-# OVERLAPPABLE #-}
     ( Applicative f
     , FromHKT hkt f inner
     , ToHKT hkt f inner
     , Generic (hkt f inner)
-    , UnHKT (hkt f inner) ~ GUnHKT (Rep (hkt f inner))
+    , GHKD_ (K1 index inner) hkt f ~ K1 index (UnHKT (hkt f inner))
     , Rep (hkt f inner) ~ (D1 d (C1 c (S1 s' (Rec0 x))))
     )
   =>

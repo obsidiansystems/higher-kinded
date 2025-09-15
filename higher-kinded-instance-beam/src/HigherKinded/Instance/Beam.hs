@@ -30,14 +30,8 @@ module HigherKinded.Instance.Beam
 
 import Data.Functor.Identity
 import Data.Kind
-import Database.Beam.Backend.SQL
-import Database.Beam.Backend.Types as Beam
 import Database.Beam.Schema.Tables as Beam
 import GHC.Generics (Generic)
-
-#ifdef VERSION_aeson
-import Data.Aeson (FromJSON, ToJSON)
-#endif
 
 import HigherKinded.HKT
 import HigherKinded.HKD
@@ -149,34 +143,11 @@ pureBeamed = pureBeam @(Beamed structure) @f
 
 type Beam :: (Type -> Type) -> Type -> Type
 type family Beam f a where
-  Beam f (SomeBeamed t) = t f
   Beam f a = Columnar f a
-
-newtype SomeBeamed t = SomeBeamed { unSomeBeamed :: t Identity }
-
-deriving newtype instance Generic (t Identity) => Generic (SomeBeamed t)
-deriving newtype instance Eq (t Identity) => Eq (SomeBeamed t)
-deriving newtype instance Ord (t Identity) => Ord (SomeBeamed t)
-deriving newtype instance Show (t Identity) => Show (SomeBeamed t)
-
-#ifdef VERSION_aeson
-deriving newtype instance FromJSON (t Identity) => FromJSON (SomeBeamed t)
-deriving newtype instance ToJSON (t Identity) => ToJSON (SomeBeamed t)
-#endif
-
-deriving newtype instance HasSqlValueSyntax syntax (t Identity) => HasSqlValueSyntax syntax (SomeBeamed t)
-deriving newtype instance (Beam.BeamBackend be, FromBackendRow be (t Identity)) => FromBackendRow be (SomeBeamed t)
 
 
 newtype Beam' f a = Beam' { unBeam' :: Beam f a }
   deriving stock (Generic)
-
-
-instance {-# OVERLAPPING #-} (ConstructHKD t (t Identity) Beam' f, Functor f) => FromHKT Beam' f (SomeBeamed t) where
-  fromHKT' (Beam' t) = SomeBeamed <$> fromHKD @_ @_ @Beam' t
-
-instance {-# OVERLAPPING #-} (ConstructHKD t (t Identity) Beam' f, Functor f) => ToHKT Beam' f (SomeBeamed t) where
-  toHKT' f_s = Beam' $ toHKD @_ @_ @Beam' $ unSomeBeamed <$> f_s
 
 
 instance {-# OVERLAPPABLE #-} (Beam f a ~ Columnar f a, FromHKT Columnar' f a) => FromHKT Beam' f a where
