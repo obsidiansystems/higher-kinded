@@ -102,6 +102,7 @@ library
                     , generic-lens-core
                     , higher-kinded-types
                     , lens
+                    , named
 
     if flag(with-aeson)
       build-depends:  aeson

@@ -20,18 +20,14 @@
 
 module HigherKinded.HKD.Build
   ( Build (..)
-  , Arg (..)
-  , type (:!)
   , pattern (:!)
-  , pattern Arg
-  , Name (..)
+  , module Named
   ) where
 
 import Data.Generics.Product.Internal.Subtype (GUpcast (..))
 import Data.Kind
 import GHC.Generics
-import GHC.OverloadedLabels
-import GHC.TypeLits
+import Named.Internal as Named (NamedF(..), Name(..), (:!), (:?), pattern Arg)
 
 import HigherKinded.HKD.Generic
 
@@ -89,47 +85,31 @@ instance
 
 instance
     ( rec0 ~ (Rec0 inner)
-    , k ~ (Arg name inner -> HKD structure hkt f)
+    , k ~ (name :! inner -> HKD structure hkt f)
     , meta ~ 'MetaSel ('Just name) i d c
     )
   =>
     GBuild (S1 meta rec0) structure hkt f k
   where
-    gbuild fill (_ :! inner) = fill (M1 (K1 inner))
+    gbuild fill (Arg inner) = fill (M1 (K1 inner))
 
 instance
     ( GBuild right structure hkt f k'
     , rec0 ~ Rec0 x
     , left ~ S1 ('MetaSel ('Just name) i d c) rec0
-    , k ~ (Arg name x -> k')
+    , k ~ (name :! x -> k')
     )
   =>
     GBuild (left :*: right) structure hkt f k
   where
-    gbuild fill (_ :! left) = gbuild \right -> fill (M1 (K1 left) :*: right)
+    gbuild fill (Arg left) = gbuild \right -> fill (M1 (K1 left) :*: right)
 
 
-
-type (:!) name a = Arg name a
-
-data Arg name a where
-  Arg_Named :: Name name -> a -> Arg name a
-  Arg_Arg :: a -> Arg name a
-
-data Name (name :: Symbol) = Name
-
-instance name ~ name' => IsLabel name' (Name name) where
-  fromLabel = Name
 
 {-# COMPLETE (:!) #-}
-pattern (:!) :: Name name -> a -> Arg name a
-pattern (:!) name a <- (\case { Arg_Named Name a -> (Name, a); Arg_Arg a -> (Name, a) } -> (name, a)) where
-  (:!) Name a = Arg_Named Name a
-
-{-# COMPLETE Arg #-}
-pattern Arg :: a -> Arg name a
-pattern Arg a <- (\case { Arg_Named Name a -> a; Arg_Arg a -> a } -> a) where
-  Arg a = Arg_Arg a
+pattern (:!) :: Name name -> a -> name :! a
+pattern (:!) name a <- (\case { Arg a -> (Name, a) } -> (name, a)) where
+  (:!) _ a = Arg a
 
 
 
