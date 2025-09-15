@@ -72,6 +72,7 @@ library
 
     -- Modules exported by the library.
     exposed-modules:  HigherKinded.HKT
+                      HigherKinded.HKT.Base
                       HigherKinded.HKT.Class
 
     -- Modules included in this library but not exported.
