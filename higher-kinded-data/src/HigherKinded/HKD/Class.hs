@@ -30,6 +30,7 @@ module HigherKinded.HKD.Class
 
 import Barbies (ConstraintsB (..), FunctorB (..), ApplicativeB (..), TraversableB (..))
 import Barbies.Constraints (Dict (..))
+import Data.Coerce
 import Data.Functor.Identity
 import Data.Functor.Product (Product (..))
 import Data.Kind
@@ -280,6 +281,24 @@ instance {-# OVERLAPPABLE #-}
     , NormalHKD hkd1 f ~ NormalHKD hkd2 f
     )
   => IsoHKD hkd1 hkd2 hkt1 hkt2 f
+
+--------------------------------------------------------------------------------
+
+coerceHKD
+  :: forall
+       (hkd1 :: (Type -> Type) -> Type)
+       (hkd2 :: (Type -> Type) -> Type)
+       (hkt1 :: (Type -> Type) -> Type -> Type)
+       (hkt2 :: (Type -> Type) -> Type -> Type)
+       (f :: Type -> Type).
+     ( IsNormalHKD hkd1 hkt1 f
+     , IsNormalHKD hkd2 hkt2 f
+     , Coercible
+         (NormalHKDRep f (Rep (hkd1 Exposed)) (Rep (hkd1 f)) ())
+         (NormalHKDRep f (Rep (hkd2 Exposed)) (Rep (hkd2 f)) ())
+     )
+  => hkd1 f -> hkd2 f
+coerceHKD = fromNormalHKD @hkd2 @hkt2 @f @() . coerce . toNormalHKD @hkd1 @hkt1 @f @()
 
 --------------------------------------------------------------------------------
 
