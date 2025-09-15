@@ -97,25 +97,6 @@ instance
 
 instance
     ( Functor f
-    , subHKD' ~ HKD subHKD Applied t
-    , ConstructHKD (HKD subHKD Applied) subHKD Applied t
-    , ConstructHKD (HKD subHKD' hkt) subHKD' hkt f
-    , GHKD_ (K1 index (SubHKD (t subHKD))) hkt f ~ K1 index (HKD subHKD' hkt f)
-    )
-  =>
-    GConstructHKDRep (K1 index (SubHKD (t subHKD))) hkt f
-  where
-    gFromHKD =
-        fmap (K1 . SubHKD . fromHKD @(HKD subHKD Applied) @subHKD @Applied @t)
-      . fromHKD @(HKD subHKD' hkt) @subHKD' @hkt @f
-      . unK1
-    gToHKD =
-        K1
-      . toHKD @(HKD subHKD' hkt) @subHKD' @hkt @f
-      . fmap (toHKD @(HKD subHKD Applied) @subHKD @Applied @t . unSubHKD . unK1)
-
-instance
-    ( Functor f
     , Functor t
     , subHKD' ~ HKD subHKD Applied t
     , ConstructHKD (HKD subHKD Applied) subHKD Applied t
@@ -135,6 +116,25 @@ instance
       . toHKD @(HKD subHKD' hkt) @subHKD' @hkt @f
       . fmap (toHKD @(HKD subHKD Applied) @subHKD @Applied @t)
       . fmap (fmap unSubHKD . unK1)
+
+instance
+    ( Functor f
+    , subHKD' ~ HKD subHKD Applied t
+    , ConstructHKD (HKD subHKD Applied) subHKD Applied t
+    , ConstructHKD (HKD subHKD' hkt) subHKD' hkt f
+    , GHKD_ (K1 index (FSubHKD (t subHKD))) hkt f ~ K1 index (HKD subHKD' hkt f)
+    )
+  =>
+    GConstructHKDRep (K1 index (FSubHKD (t subHKD))) hkt f
+  where
+    gFromHKD =
+        fmap (K1 . FSubHKD . fromHKD @(HKD subHKD Applied) @subHKD @Applied @t)
+      . fromHKD @(HKD subHKD' hkt) @subHKD' @hkt @f
+      . unK1
+    gToHKD =
+        K1
+      . toHKD @(HKD subHKD' hkt) @subHKD' @hkt @f
+      . fmap (toHKD @(HKD subHKD Applied) @subHKD @Applied @t . unFSubHKD . unK1)
 
 instance {-# OVERLAPPABLE #-}
     ( Applicative f
