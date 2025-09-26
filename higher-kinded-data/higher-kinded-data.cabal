@@ -57,6 +57,10 @@ flag with-aeson
   default: True
   manual: True
 
+flag with-pretty
+  default: True
+  manual: True
+
 flag with-quickcheck
   default: True
   manual: True
@@ -86,6 +90,7 @@ library
                       HigherKinded.HKD.Construction
                       HigherKinded.HKD.Generic
                       HigherKinded.HKD.Internal.Exposed
+                      HigherKinded.HKD.Internal.Orphans
                       HigherKinded.HKD.Internal.Void
 
     -- Modules included in this library but not exported.
@@ -106,6 +111,9 @@ library
 
     if flag(with-aeson)
       build-depends:  aeson
+
+    if flag(with-pretty)
+      build-depends:  pretty
 
     if flag(with-quickcheck)
       build-depends:  QuickCheck
